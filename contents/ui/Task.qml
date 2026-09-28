@@ -306,14 +306,30 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    Timer {
+        id: hoverToolTipTimer
+        interval: (tasksRoot && tasksRoot.toolTipAreaItem && tasksRoot.toolTipAreaItem.toolTipOpen)
+            ? 0
+            : Kirigami.Units.toolTipDelay
+        onTriggered: {
+            if (task.isTaskHovered && task.active && !task.toolTipOpen) {
+                task.updateMainItemBindings();
+                task.showToolTip();
+            }
+        }
+    }
+
     onIsTaskHoveredChanged: {
         if (isTaskHovered) {
             task.forceActiveFocus(Qt.MouseFocusReason);
             task.updateMainItemBindings();
+            hoverToolTipTimer.restart();
             if (tasksRoot) {
                 tasksRoot.setHoveredTask(index);
             }
         } else {
+            hoverToolTipTimer.stop();
+            task.hideToolTip();
             tasksRoot.toolTipOpenedByClick = null;
             if (tasksRoot) {
                 tasksRoot.clearHoveredTask(index);
