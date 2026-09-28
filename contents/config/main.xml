@@ -174,6 +174,28 @@
       <label>Automatically set the panel thickness to fit the dock and elevation.</label>
       <default>true</default>
     </entry>
+    <entry name="containerBackgroundType" type="Enum">
+      <label>Container background type: 0 = Solid, 1 = Transparent</label>
+      <choices>
+        <choice name="Solid"/>
+        <choice name="Transparent"/>
+      </choices>
+      <default>0</default>
+    </entry>
+    <entry name="containerBackgroundColor" type="Color">
+      <label>Background color for the dock container.</label>
+      <default>#202024</default>
+    </entry>
+    <entry name="containerBorderWidth" type="Int">
+      <label>Border width of the dock container in pixels (0 for no border).</label>
+      <default>1</default>
+      <min>0</min>
+      <max>10</max>
+    </entry>
+    <entry name="containerBorderColor" type="Color">
+      <label>Border color of the dock container.</label>
+      <default>#38ffffff</default>
+    </entry>
   </group>
 
 </kcfg>

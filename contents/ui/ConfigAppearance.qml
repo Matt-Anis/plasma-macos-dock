@@ -5,7 +5,9 @@
 */
 
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls as QQC2
+import QtQuick.Dialogs as QtDialogs
 
 import org.kde.kcmutils as KCMUtils
 import org.kde.kirigami as Kirigami
@@ -34,6 +36,10 @@ KCMUtils.SimpleKCM {
     property alias cfg_verticalPadding: verticalPaddingSpinBox.value
     property alias cfg_elevation: elevationSpinBox.value
     property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
+    property alias cfg_containerBackgroundType: containerBackgroundTypeComboBox.currentIndex
+    property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
+    property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
 
     Component.onCompleted: {
         /* Don't rely on bindings for checking the radiobuttons
@@ -210,6 +216,87 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: i18nc("@label:checkbox", "Panel thickness:")
             text: i18nc("@option:check", "Auto-adjust panel thickness to fit dock")
             checked: Plasmoid.configuration.autoAdjustPanelThickness !== undefined ? Plasmoid.configuration.autoAdjustPanelThickness : true
+        }
+
+        Item {
+            Kirigami.FormData.isSection: true
+        }
+
+        QQC2.ComboBox {
+            id: containerBackgroundTypeComboBox
+            Kirigami.FormData.label: i18nc("@label:combobox", "Container background:")
+            model: [
+                i18nc("@option:combobox", "Solid"),
+                i18nc("@option:combobox", "Transparent")
+            ]
+            currentIndex: Plasmoid.configuration.containerBackgroundType !== undefined ? Plasmoid.configuration.containerBackgroundType : 0
+        }
+
+        RowLayout {
+            visible: containerBackgroundTypeComboBox.currentIndex === 0
+            Kirigami.FormData.label: i18nc("@label", "Background color:")
+            spacing: Kirigami.Units.smallSpacing
+
+            Rectangle {
+                width: Kirigami.Units.gridUnit * 1.5
+                height: Kirigami.Units.gridUnit * 1.5
+                radius: Kirigami.Units.smallSpacing
+                color: root.cfg_containerBackgroundColor
+                border.color: Kirigami.Theme.separatorColor
+                border.width: 1
+            }
+
+            QQC2.Button {
+                text: i18nc("@action:button", "Choose Color…")
+                icon.name: "color-picker"
+                onClicked: bgColorDialog.open()
+            }
+
+            QtDialogs.ColorDialog {
+                id: bgColorDialog
+                selectedColor: root.cfg_containerBackgroundColor
+                onAccepted: {
+                    root.cfg_containerBackgroundColor = selectedColor;
+                }
+            }
+        }
+
+        QQC2.SpinBox {
+            id: containerBorderWidthSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Border thickness (px):")
+            from: 0
+            to: 10
+            stepSize: 1
+            value: Plasmoid.configuration.containerBorderWidth !== undefined ? Plasmoid.configuration.containerBorderWidth : 1
+        }
+
+        RowLayout {
+            visible: containerBorderWidthSpinBox.value > 0
+            Kirigami.FormData.label: i18nc("@label", "Border color:")
+            spacing: Kirigami.Units.smallSpacing
+
+            Rectangle {
+                width: Kirigami.Units.gridUnit * 1.5
+                height: Kirigami.Units.gridUnit * 1.5
+                radius: Kirigami.Units.smallSpacing
+                color: root.cfg_containerBorderColor
+                border.color: Kirigami.Theme.separatorColor
+                border.width: 1
+            }
+
+            QQC2.Button {
+                text: i18nc("@action:button", "Choose Color…")
+                icon.name: "color-picker"
+                onClicked: borderColorDialog.open()
+            }
+
+            QtDialogs.ColorDialog {
+                id: borderColorDialog
+                selectedColor: root.cfg_containerBorderColor
+                onAccepted: {
+                    root.cfg_containerBorderColor = selectedColor;
+                }
+            }
         }
     }
 }

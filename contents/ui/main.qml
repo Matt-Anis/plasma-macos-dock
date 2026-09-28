@@ -61,6 +61,14 @@ PlasmoidItem {
     readonly property bool autoAdjustPanelThickness: Plasmoid.configuration.autoAdjustPanelThickness !== undefined
         ? Plasmoid.configuration.autoAdjustPanelThickness
         : true
+    readonly property int containerBackgroundType: Plasmoid.configuration.containerBackgroundType !== undefined
+        ? Plasmoid.configuration.containerBackgroundType
+        : 0
+    readonly property color containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    readonly property int containerBorderWidth: Plasmoid.configuration.containerBorderWidth !== undefined
+        ? Plasmoid.configuration.containerBorderWidth
+        : 1
+    readonly property color containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
 
     readonly property int targetThickness: vertical
         ? (iconSize + horizontalPadding * 2 + elevation)
@@ -573,14 +581,14 @@ PlasmoidItem {
                 rightMargin: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
-            // macOS dock translucent frosted capsule background
+            // macOS dock capsule background
             Rectangle {
                 id: dockBackground
                 anchors.fill: parent
                 radius: Math.min(width, height) / 3
-                color: Qt.rgba(0.12, 0.12, 0.14, 0.65)
-                border.color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
-                border.width: 1
+                color: tasks.containerBackgroundType === 1 ? "transparent" : tasks.containerBackgroundColor
+                border.color: tasks.containerBorderWidth > 0 ? tasks.containerBorderColor : "transparent"
+                border.width: tasks.containerBorderWidth
                 z: -1
             }
 
