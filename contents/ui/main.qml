@@ -125,17 +125,30 @@ PlasmoidItem {
         ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * iconSpacing)
         : 0
 
+    readonly property real maxExtraSpan: {
+        if (!zoomEnabled) {
+            return 0;
+        }
+        let factorSum = 1.0;
+        for (let d = 1; d <= zoomBlastRadius; ++d) {
+            const u = d / (zoomBlastRadius + 1);
+            const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
+            factorSum += 2.0 * (cosVal * cosVal);
+        }
+        return Math.ceil(iconSize * (zoomMultiplier - 1.0) * 0.7 * factorSum) + 24;
+    }
+
     readonly property real dockWidth: {
         if (shouldShrinkToZero) {
             return Kirigami.Units.gridUnit;
         }
-        return vertical ? targetThickness : (tasksLength + horizontalPadding * 2);
+        return vertical ? targetThickness : (tasksLength + horizontalPadding * 2 + maxExtraSpan);
     }
     readonly property real dockHeight: {
         if (shouldShrinkToZero) {
             return Kirigami.Units.gridUnit;
         }
-        return vertical ? (tasksLength + verticalPadding * 2) : targetThickness;
+        return vertical ? (tasksLength + verticalPadding * 2 + maxExtraSpan) : targetThickness;
     }
 
     width: (vertical && parent) ? parent.width : dockWidth

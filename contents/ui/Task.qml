@@ -163,6 +163,14 @@ PlasmaCore.ToolTipArea {
         if (!completed) {
             return;
         }
+        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || zoomFactor > 0)) {
+            if (moveAnim.running) {
+                moveAnim.stop();
+                translateTransform.x = 0;
+            }
+            oldX = x;
+            return;
+        }
         if (oldX < 0) {
             oldX = x;
             return;
@@ -174,6 +182,14 @@ PlasmaCore.ToolTipArea {
     }
     onYChanged: {
         if (!completed) {
+            return;
+        }
+        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || zoomFactor > 0)) {
+            if (moveAnim.running) {
+                moveAnim.stop();
+                translateTransform.y = 0;
+            }
+            oldY = y;
             return;
         }
         if (oldY < 0) {
