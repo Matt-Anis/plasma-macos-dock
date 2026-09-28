@@ -746,6 +746,16 @@ PlasmaExtras.Menu {
         }
     }
 
+    PlasmaExtras.MenuItem {
+        text: i18n("Test Bounce Animation")
+        icon: "media-playback-start"
+        onClicked: {
+            if (menu.visualParent && menu.visualParent.triggerTestBounce) {
+                menu.visualParent.triggerTestBounce();
+            }
+        }
+    }
+
     PlasmaExtras.MenuItem { separator: true }
 
     PlasmaExtras.MenuItem {

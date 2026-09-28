@@ -84,19 +84,27 @@ PlasmoidItem {
         return vertical ? (tasksLength + verticalPadding * 2) : targetThickness;
     }
 
-    width: dockWidth
-    height: dockHeight
+    width: (vertical && parent) ? parent.width : dockWidth
+    height: (!vertical && parent) ? parent.height : dockHeight
     implicitWidth: dockWidth
     implicitHeight: dockHeight
 
-    Layout.fillWidth: false
-    Layout.fillHeight: false
+    Layout.fillWidth: vertical
+    Layout.fillHeight: !vertical
 
-    Layout.minimumWidth: dockWidth
-    Layout.maximumWidth: dockWidth
+    Layout.alignment: {
+        if (!vertical) {
+            return Plasmoid.location === PlasmaCore.Types.TopEdge ? Qt.AlignTop : Qt.AlignBottom;
+        } else {
+            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? Qt.AlignLeft : Qt.AlignRight;
+        }
+    }
+
+    Layout.minimumWidth: vertical ? undefined : dockWidth
+    Layout.maximumWidth: vertical ? undefined : dockWidth
     Layout.preferredWidth: dockWidth
-    Layout.minimumHeight: dockHeight
-    Layout.maximumHeight: dockHeight
+    Layout.minimumHeight: vertical ? dockHeight : undefined
+    Layout.maximumHeight: vertical ? dockHeight : undefined
     Layout.preferredHeight: dockHeight
 
     // Walk up visual parent hierarchy to disable the native panel background

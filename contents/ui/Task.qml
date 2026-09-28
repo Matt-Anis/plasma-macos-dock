@@ -18,6 +18,7 @@ import org.kde.kirigami as Kirigami
 import "code/LayoutMetrics.js" as LayoutMetrics
 import "code/TaskTools.js" as TaskTools
 import org.kde.plasma.plasmoid
+import org.kde.taskmanager as TaskManager
 
 PlasmaCore.ToolTipArea {
     id: task
@@ -52,6 +53,9 @@ PlasmaCore.ToolTipArea {
     required property int index
     required property /*main.qml*/ Item tasksRoot
 
+    readonly property TaskManager.TasksModel tasksModel: tasksRoot.tasksModel
+    readonly property var backend: tasksRoot.backend
+
     readonly property int pid: model.AppPid
     readonly property string appName: model.AppName
     readonly property string appId: model.AppId.replace(/\.desktop/, '')
@@ -79,8 +83,52 @@ PlasmaCore.ToolTipArea {
     readonly property bool highlighted: (inPopup && activeFocus) || (!inPopup && containsMouse)
         || (task.contextMenu && task.contextMenu.status === PlasmaExtras.Menu.Open)
         || (!!tasksRoot.groupDialog && tasksRoot.groupDialog.visualParent === task)
+
+    property bool hasAttention: false
+
+    function updateAttention(): void {
+        if (!tasksModel) {
+            return;
+        }
+
+        let att = false;
+        try {
+            // 1. Direct property check on model
+            if (task.model && task.model.IsDemandingAttention) {
+                att = true;
+            }
+
+            // 2. Query model role on task's own index
+            const mIdx = task.modelIndex();
+            if (!att && mIdx) {
+                att = Boolean(tasksModel.data(mIdx, TaskManager.AbstractTasksModel.IsDemandingAttention));
+            }
+
+            // 3. Smart launcher urgency
+            if (!att && task.smartLauncherItem && task.smartLauncherItem.urgent) {
+                att = true;
+            }
+
+            // 4. Query child tasks if grouped
+            if (!att && mIdx) {
+                const count = tasksModel.rowCount(mIdx);
+                for (let i = 0; i < count; ++i) {
+                    const childIdx = tasksModel.makeModelIndex(task.index, i);
+                    if (tasksModel.data(childIdx, TaskManager.AbstractTasksModel.IsDemandingAttention)) {
+                        att = true;
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            // Guard against unready indexes
+        }
+
+        hasAttention = att;
+    }
+
     readonly property bool isRunning: Boolean(task.model.IsWindow || (task.childCount > 0))
-    readonly property bool demandsAttention: Boolean(task.model.IsDemandingAttention || (task.smartLauncherItem && task.smartLauncherItem.urgent))
+    readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (task.smartLauncherItem && task.smartLauncherItem.urgent) || task.model.IsStartup)
 
     active: !inPopup && !tasksRoot.groupDialog && task.contextMenu?.status !== PlasmaExtras.Menu.Open
     interactive: model.IsWindow || mainItem.playerData
@@ -227,6 +275,18 @@ PlasmaCore.ToolTipArea {
         }
 
         previousChildCount = childCount;
+        updateAttention();
+    }
+
+    Connections {
+        target: tasksModel
+        ignoreUnknownSignals: true
+        function onDataChanged(): void {
+            task.updateAttention();
+        }
+        function onAnyTaskDemandsAttentionChanged(): void {
+            task.updateAttention();
+        }
     }
 
     onIndexChanged: {
@@ -236,6 +296,8 @@ PlasmaCore.ToolTipArea {
                 && !Plasmoid.configuration.separateLaunchers) {
             tasksRoot.requestLayout();
         }
+
+        task.updateAttention();
     }
 
     onSmartLauncherEnabledChanged: {
@@ -601,14 +663,6 @@ PlasmaCore.ToolTipArea {
             }
         ]
 
-        Loader {
-            anchors.centerIn: parent
-            width: Math.min(parent.width, parent.height)
-            height: width
-            active: task.model.IsStartup
-            sourceComponent: busyIndicator
-        }
-
         transform: Translate {
             id: bounceTranslate
             x: 0
@@ -616,33 +670,78 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    property bool testBounce: false
+
+    Timer {
+        id: testBounceTimer
+        interval: 4500
+        onTriggered: task.testBounce = false
+    }
+
+    function triggerTestBounce(): void {
+        testBounce = true;
+        testBounceTimer.restart();
+    }
+
+    readonly property real bounceJumpHeight: Math.min(10, Math.max(6, Math.round(tasksRoot.iconSize * 0.18)))
+    readonly property real bounceReboundHeight: Math.max(2, Math.round(bounceJumpHeight * 0.3))
+
+    readonly property real bounceOffset: {
+        if (!tasksRoot.vertical) {
+            return Plasmoid.location === PlasmaCore.Types.TopEdge ? bounceJumpHeight : -bounceJumpHeight;
+        } else {
+            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? bounceJumpHeight : -bounceJumpHeight;
+        }
+    }
+
+    readonly property real bounceReboundOffset: {
+        if (!tasksRoot.vertical) {
+            return Plasmoid.location === PlasmaCore.Types.TopEdge ? bounceReboundHeight : -bounceReboundHeight;
+        } else {
+            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? bounceReboundHeight : -bounceReboundHeight;
+        }
+    }
+
     SequentialAnimation {
         id: bounceAnim
-        running: task.demandsAttention && !task.inPopup
+        running: (task.demandsAttention || task.testBounce) && !task.inPopup
         loops: Animation.Infinite
 
+        // Ascend to peak
         NumberAnimation {
             target: bounceTranslate
             property: tasksRoot.vertical ? "x" : "y"
-            to: {
-                if (!tasksRoot.vertical) {
-                    return Plasmoid.location === PlasmaCore.Types.TopEdge ? 12 : -12;
-                } else {
-                    return Plasmoid.location === PlasmaCore.Types.LeftEdge ? 12 : -12;
-                }
-            }
-            duration: 260
-            easing.type: Easing.OutQuad
+            to: task.bounceOffset
+            duration: 220
+            easing.type: Easing.OutCubic
         }
+        // Descend to base
         NumberAnimation {
             target: bounceTranslate
             property: tasksRoot.vertical ? "x" : "y"
             to: 0
-            duration: 260
+            duration: 200
             easing.type: Easing.InQuad
         }
+        // Elastic rebound
+        NumberAnimation {
+            target: bounceTranslate
+            property: tasksRoot.vertical ? "x" : "y"
+            to: task.bounceReboundOffset
+            duration: 110
+            easing.type: Easing.OutQuad
+        }
+        // Settle back to base
+        NumberAnimation {
+            target: bounceTranslate
+            property: tasksRoot.vertical ? "x" : "y"
+            to: 0
+            duration: 100
+            easing.type: Easing.InQuad
+        }
+        // Rest pause before next bounce
         PauseAnimation {
-            duration: 120
+            duration: 280
         }
 
         onRunningChanged: {
@@ -731,7 +830,7 @@ PlasmaCore.ToolTipArea {
         },
         State {
             name: "attention"
-            when: task.model.IsDemandingAttention || (task.smartLauncherItem && task.smartLauncherItem.urgent)
+            when: task.demandsAttention
 
             PropertyChanges {
                 frame.basePrefix: "attention"
@@ -766,6 +865,7 @@ PlasmaCore.ToolTipArea {
         if (!inPopup && !model.IsWindow) {
             taskInitComponent.createObject(task);
         }
+        updateAttention();
         completed = true;
     }
     Component.onDestruction: {
