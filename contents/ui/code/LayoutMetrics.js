@@ -9,18 +9,26 @@
 const iconMargin = Math.round(Kirigami.Units.smallSpacing / 4);
 const labelMargin = Kirigami.Units.smallSpacing;
 
+function isIconsOnly() {
+    return (typeof tasks !== 'undefined' && tasks) ? tasks.iconsOnly : true;
+}
+
+function getIconSize() {
+    return (typeof tasks !== 'undefined' && tasks && tasks.iconSize) ? tasks.iconSize : 48;
+}
+
 function horizontalMargins() {
-    if (tasks.iconsOnly) {
+    if (isIconsOnly()) {
         return 0;
     }
-    return (taskFrame.margins.left + taskFrame.margins.right);
+    return (typeof taskFrame !== 'undefined' && taskFrame ? taskFrame.margins.left + taskFrame.margins.right : 0);
 }
 
 function verticalMargins() {
-    if (tasks.iconsOnly) {
+    if (isIconsOnly()) {
         return 0;
     }
-    return (taskFrame.margins.top + taskFrame.margins.bottom);
+    return (typeof taskFrame !== 'undefined' && taskFrame ? taskFrame.margins.top + taskFrame.margins.bottom : 0);
 }
 
 function adjustMargin(height, margin) {
@@ -53,13 +61,13 @@ function optimumCapacity(width, height) {
 }
 
 function preferredMinWidth() {
-    if (tasks.iconsOnly) {
-        return (tasks.iconSize || 48);
+    if (isIconsOnly()) {
+        return getIconSize();
     }
 
     let width = preferredMinLauncherWidth();
 
-    if (!tasks.vertical && !tasks.iconsOnly) {
+    if (typeof tasks !== 'undefined' && tasks && !tasks.vertical && !tasks.iconsOnly) {
       width +=
           (Kirigami.Units.smallSpacing * 2) +
           (Kirigami.Units.gridUnit * 8);
@@ -69,8 +77,8 @@ function preferredMinWidth() {
 }
 
 function preferredMaxWidth() {
-    if (tasks.iconsOnly) {
-        return (tasks.iconSize || 48);
+    if (isIconsOnly()) {
+        return getIconSize();
     }
 
     // Avoid doing a bunch of unnecessary work below in vertical mode
@@ -110,16 +118,16 @@ function preferredMaxWidth() {
 }
 
 function preferredMinHeight() {
-    if (tasks.iconsOnly) {
-        return (tasks.iconSize || 48);
+    if (isIconsOnly()) {
+        return getIconSize();
     }
     // TODO FIXME UPSTREAM: Port to proper font metrics for descenders once we have access to them.
     return Kirigami.Units.iconSizes.sizeForLabels + 4;
 }
 
 function preferredMaxHeight() {
-    if (tasks.iconsOnly) {
-        return (tasks.iconSize || 48);
+    if (isIconsOnly()) {
+        return getIconSize();
     }
     if (tasks.vertical) {
         let taskPreferredSize = Math.max(Kirigami.Units.iconSizes.sizeForLabels,

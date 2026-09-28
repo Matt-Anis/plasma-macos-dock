@@ -18,7 +18,8 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.workspace.trianglemousefilter
 
 import org.kde.taskmanager as TaskManager
-import plasma.applet.org.kde.plasma.taskmanager as TaskManagerApplet
+import "code/LayoutMetrics.js" as LayoutMetrics
+import "code/TaskTools.js" as TaskTools
 import org.kde.plasma.workspace.dbus as DBus
 
 PlasmoidItem {
@@ -53,7 +54,7 @@ PlasmoidItem {
         : 10
     readonly property int verticalPadding: Plasmoid.configuration.verticalPadding !== undefined
         ? Plasmoid.configuration.verticalPadding
-        : 6
+        : 8
     readonly property int elevation: Plasmoid.configuration.elevation !== undefined
         ? Plasmoid.configuration.elevation
         : 8
@@ -154,7 +155,7 @@ PlasmoidItem {
     }
 
     function publishIconGeometries(taskItems: /*list<Item>*/var): void {
-        if (TaskManagerApplet.TaskTools.taskManagerInstanceCount >= 2) {
+        if (TaskTools.taskManagerInstanceCount >= 2) {
             return;
         }
         for (let i = 0; i < taskItems.length - 1; ++i) {
@@ -214,7 +215,7 @@ PlasmoidItem {
         groupMode: groupModeEnumValue(Plasmoid.configuration.groupingStrategy)
         groupInline: !Plasmoid.configuration.groupPopups && !tasks.iconsOnly
         groupingWindowTasksThreshold: (Plasmoid.configuration.onlyGroupWhenFull && !tasks.iconsOnly
-            ? TaskManagerApplet.LayoutMetrics.optimumCapacity(tasks.width, tasks.height) + 1 : -1)
+            ? LayoutMetrics.optimumCapacity(tasks.width, tasks.height) + 1 : -1)
 
         onLauncherListChanged: {
             Plasmoid.configuration.launchers = launcherList;
@@ -267,8 +268,51 @@ PlasmoidItem {
         }
     }
 
-    readonly property TaskManagerApplet.Backend backend: TaskManagerApplet.Backend {
+    readonly property QtObject backend: QtObject {
         id: backend
+
+        signal addLauncher(url url)
+
+        readonly property int none: 0
+        readonly property int close: 1
+        readonly property int newInstance: 2
+        readonly property int toggleMinimized: 3
+        readonly property int toggleGrouping: 4
+        readonly property int bringToCurrentDesktop: 5
+
+        function globalRect(item) {
+            if (!item || !item.window) {
+                return Qt.rect(0, 0, 0, 0);
+            }
+            const pt = item.mapToItem(null, 0, 0);
+            return Qt.rect(pt.x, pt.y, item.width, item.height);
+        }
+
+        function isApplication(url) {
+            return String(url).endsWith(".desktop");
+        }
+
+        function tryDecodeApplicationsUrl(url) {
+            return url;
+        }
+
+        function parentPid(pid) {
+            return 0;
+        }
+
+        function jumpListActions(launcherUrl, parent) {
+            return [];
+        }
+
+        function placesActions(launcherUrl, showAllPlaces, parent) {
+            return [];
+        }
+
+        function recentDocumentActions(launcherUrl, parent) {
+            return [];
+        }
+
+        function setActionGroup(action) {}
 
         onAddLauncher: url => {
             tasks.addLauncher(url);
@@ -300,7 +344,7 @@ PlasmoidItem {
         target: Plasmoid
 
         function onLocationChanged(): void {
-            if (TaskManagerApplet.TaskTools.taskManagerInstanceCount >= 2) {
+            if (TaskTools.taskManagerInstanceCount >= 2) {
                 return;
             }
             // This is on a timer because the panel may not have
@@ -395,7 +439,7 @@ PlasmoidItem {
             visible: false
 
             imagePath: "widgets/tasks"
-            prefix: TaskManagerApplet.TaskTools.taskPrefix("normal", Plasmoid.location)
+            prefix: TaskTools.taskPrefix("normal", Plasmoid.location)
         }
 
         MouseHandler {
@@ -491,16 +535,10 @@ PlasmoidItem {
                 anchors.centerIn: parent
 
                 count: tasksModel.count
+                iconSpacing: tasks.iconSpacing
 
                 width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : tasks.tasksLength)
                 height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.tasksLength : tasks.iconSize)
-
-                flow: {
-                    if (tasks.vertical) {
-                        return Plasmoid.configuration.forceStripes ? Grid.LeftToRight : Grid.TopToBottom
-                    }
-                    return Plasmoid.configuration.forceStripes ? Grid.TopToBottom : Grid.LeftToRight
-                }
 
                 onAnimatingChanged: {
                     if (!animating) {
@@ -549,7 +587,7 @@ PlasmoidItem {
 
         const task = taskRepeater.itemAt(index) as Task;
         if (task) {
-            TaskManagerApplet.TaskTools.activateTask(task.modelIndex(), task.model, null, task, Plasmoid, this, effectWatcher.registered);
+            TaskTools.activateTask(task.modelIndex(), task.model, null, task, Plasmoid, this, effectWatcher.registered);
         }
     }
 
@@ -576,12 +614,12 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
-        TaskManagerApplet.TaskTools.taskManagerInstanceCount += 1;
+        TaskTools.taskManagerInstanceCount += 1;
         requestLayout.connect(iconGeometryTimer.restart);
         applyPanelTransparency();
     }
 
     Component.onDestruction: {
-        TaskManagerApplet.TaskTools.taskManagerInstanceCount -= 1;
+        TaskTools.taskManagerInstanceCount -= 1;
     }
 }

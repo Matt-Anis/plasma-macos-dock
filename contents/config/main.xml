@@ -164,7 +164,7 @@
     </entry>
     <entry name="verticalPadding" type="Int">
       <label>Vertical padding of the dock container in pixels.</label>
-      <default>6</default>
+      <default>8</default>
     </entry>
     <entry name="elevation" type="Int">
       <label>Elevation offset of the dock from the screen edge in pixels.</label>

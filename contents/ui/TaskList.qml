@@ -7,15 +7,11 @@
 import QtQuick
 import QtQuick.Layouts
 
-import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
-import plasma.applet.org.kde.plasma.taskmanager as TaskManagerApplet
 
 GridLayout {
+    id: grid
     property bool animating: false
-
-    rowSpacing: vertical ? tasks.iconSpacing : 0
-    columnSpacing: vertical ? 0 : tasks.iconSpacing
 
     property int animationsRunning: 0
     onAnimationsRunningChanged: {
@@ -23,40 +19,13 @@ GridLayout {
     }
 
     required property int count
+    property int iconSpacing: 4
 
     readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
-    readonly property real minimumWidth: children
-        .filter(item => item.visible && item.width > 0)
-        .reduce((minimumWidth, item) => Math.min(minimumWidth, item.width), Infinity)
+    rows: vertical ? count : 1
+    columns: vertical ? 1 : count
 
-    readonly property int stripeCount: {
-        if (Plasmoid.configuration.maxStripes === 1) {
-            return 1;
-        }
-
-        // The maximum number of stripes allowed by the applet's size
-        const stripeSizeLimit = vertical
-            ? Math.floor(parent.width / children[0].implicitWidth)
-            : Math.floor(parent.height / children[0].implicitHeight)
-        const maxStripes = Math.min(Plasmoid.configuration.maxStripes, stripeSizeLimit)
-
-        if (Plasmoid.configuration.forceStripes) {
-            return maxStripes;
-        }
-
-        // The number of tasks that will fill a "stripe" before starting the next one
-        const maxTasksPerStripe = vertical
-            ? Math.ceil(parent.height / TaskManagerApplet.LayoutMetrics.preferredMinHeight())
-            : Math.ceil(parent.width / TaskManagerApplet.LayoutMetrics.preferredMinWidth())
-
-        return Math.min(Math.ceil(count / maxTasksPerStripe), maxStripes)
-    }
-
-    readonly property int orthogonalCount: {
-        return Math.ceil(count / stripeCount);
-    }
-
-    rows: vertical ? orthogonalCount : stripeCount
-    columns: vertical ? stripeCount : orthogonalCount
+    rowSpacing: vertical ? iconSpacing : 0
+    columnSpacing: vertical ? 0 : iconSpacing
 }
