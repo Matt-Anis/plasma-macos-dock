@@ -69,6 +69,52 @@ PlasmoidItem {
         ? Plasmoid.configuration.containerBorderWidth
         : 1
     readonly property color containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    readonly property bool zoomEnabled: Plasmoid.configuration.zoomEnabled !== undefined
+        ? Plasmoid.configuration.zoomEnabled
+        : true
+    readonly property real zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined
+        ? Plasmoid.configuration.zoomMultiplier
+        : 1.5
+    readonly property int zoomBlastRadius: Plasmoid.configuration.zoomBlastRadius !== undefined
+        ? Plasmoid.configuration.zoomBlastRadius
+        : 2
+    readonly property int hoverElevation: Plasmoid.configuration.hoverElevation !== undefined
+        ? Plasmoid.configuration.hoverElevation
+        : 12
+
+    property int hoveredTaskIndex: -1
+
+    function magnificationFactorForIndex(index: int): real {
+        if (!zoomEnabled || hoveredTaskIndex < 0) {
+            return 0.0;
+        }
+        const dist = Math.abs(index - hoveredTaskIndex);
+        if (dist > zoomBlastRadius) {
+            return 0.0;
+        }
+        const u = dist / (zoomBlastRadius + 1);
+        const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
+        return cosVal * cosVal;
+    }
+
+    Timer {
+        id: resetHoverTimer
+        interval: 280
+        onTriggered: {
+            tasks.hoveredTaskIndex = -1;
+        }
+    }
+
+    function setHoveredTask(index: int): void {
+        resetHoverTimer.stop();
+        hoveredTaskIndex = index;
+    }
+
+    function clearHoveredTask(index: int): void {
+        if (hoveredTaskIndex === index) {
+            resetHoverTimer.restart();
+        }
+    }
 
     readonly property int targetThickness: vertical
         ? (iconSize + horizontalPadding * 2 + elevation)
@@ -565,8 +611,8 @@ PlasmoidItem {
 
             LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
 
-            width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (tasks.tasksLength + tasks.horizontalPadding * 2)
-            height: tasks.vertical ? (tasks.tasksLength + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
+            width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (taskList.width + tasks.horizontalPadding * 2)
+            height: tasks.vertical ? (taskList.height + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
 
             anchors {
                 horizontalCenter: tasks.vertical ? undefined : parent.horizontalCenter
@@ -601,8 +647,8 @@ PlasmoidItem {
                 count: tasksModel.count
                 iconSpacing: tasks.iconSpacing
 
-                width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : tasks.tasksLength)
-                height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.tasksLength : tasks.iconSize)
+                width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : Math.max(tasks.tasksLength, implicitWidth))
+                height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? Math.max(tasks.tasksLength, implicitHeight) : tasks.iconSize)
 
                 onAnimatingChanged: {
                     if (!animating) {

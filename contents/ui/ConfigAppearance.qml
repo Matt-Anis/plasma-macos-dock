@@ -40,6 +40,10 @@ KCMUtils.SimpleKCM {
     property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
     property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
     property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    property alias cfg_zoomEnabled: zoomEnabledCheckBox.checked
+    property real cfg_zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5
+    property alias cfg_zoomBlastRadius: zoomBlastRadiusSpinBox.value
+    property alias cfg_hoverElevation: hoverElevationSpinBox.value
 
     Component.onCompleted: {
         /* Don't rely on bindings for checking the radiobuttons
@@ -297,6 +301,56 @@ KCMUtils.SimpleKCM {
                     root.cfg_containerBorderColor = selectedColor;
                 }
             }
+        }
+
+        Item {
+            Kirigami.FormData.isSection: true
+        }
+
+        QQC2.CheckBox {
+            id: zoomEnabledCheckBox
+            Kirigami.FormData.label: i18nc("@label:checkbox", "Magnification:")
+            text: i18nc("@option:check", "Magnify icons on hover")
+            checked: Plasmoid.configuration.zoomEnabled !== undefined ? Plasmoid.configuration.zoomEnabled : true
+        }
+
+        QQC2.SpinBox {
+            id: zoomMultiplierSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Zoom multiplier:")
+            from: 10
+            to: 20
+            stepSize: 1
+            value: Math.round((Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5) * 10)
+            textFromValue: function(value, locale) {
+                return (value / 10.0).toFixed(1) + "x";
+            }
+            valueFromText: function(text, locale) {
+                return Math.round(parseFloat(text) * 10);
+            }
+            onValueChanged: {
+                root.cfg_zoomMultiplier = value / 10.0;
+            }
+        }
+
+        QQC2.SpinBox {
+            id: zoomBlastRadiusSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Blast radius (icons):")
+            from: 1
+            to: 4
+            stepSize: 1
+            value: Plasmoid.configuration.zoomBlastRadius !== undefined ? Plasmoid.configuration.zoomBlastRadius : 2
+        }
+
+        QQC2.SpinBox {
+            id: hoverElevationSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Hover elevation (px):")
+            from: 0
+            to: 32
+            stepSize: 2
+            value: Plasmoid.configuration.hoverElevation !== undefined ? Plasmoid.configuration.hoverElevation : 12
         }
     }
 }

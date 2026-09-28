@@ -30,6 +30,30 @@ PlasmaCore.ToolTipArea {
     // so un-rotate them here to fix that.
     rotation: Plasmoid.configuration.reverseMode && Plasmoid.formFactor === PlasmaCore.Types.Vertical ? 180 : 0
 
+    readonly property real targetZoomFactor: (!inPopup && tasksRoot) ? tasksRoot.magnificationFactorForIndex(index) : 0.0
+
+    property real zoomFactor: 0.0
+
+    Behavior on zoomFactor {
+        NumberAnimation {
+            duration: 260
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    onTargetZoomFactorChanged: {
+        zoomFactor = targetZoomFactor;
+    }
+
+    readonly property real hoverMargin: Math.round(tasksRoot ? Math.max(tasksRoot.verticalPadding, tasksRoot.iconSpacing * 1.5, 8) : 8)
+    readonly property bool isTaskHovered: (!inPopup && (containsMouse || (iconHoverHandler && iconHoverHandler.hovered)))
+
+    readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * zoomFactor
+    readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * zoomFactor
+    readonly property real extraSpan: (tasksRoot && !inPopup) ? (tasksRoot.iconSize * (currentScale - 1.0) * 0.7) : 0.0
+
+    z: inPopup ? 0 : Math.round(zoomFactor * 100)
+
     implicitHeight: inPopup
                     ? LayoutMetrics.preferredHeightInPopup()
                     : tasksRoot.iconSize
@@ -37,17 +61,17 @@ PlasmaCore.ToolTipArea {
                     ? LayoutMetrics.preferredMaxWidth()
                     : tasksRoot.iconSize
 
-    width: implicitWidth
-    height: implicitHeight
+    width: Layout.preferredWidth
+    height: Layout.preferredHeight
 
     Layout.fillWidth: false
     Layout.fillHeight: false
-    Layout.preferredWidth: implicitWidth
-    Layout.preferredHeight: implicitHeight
-    Layout.minimumWidth: implicitWidth
-    Layout.minimumHeight: implicitHeight
-    Layout.maximumWidth: implicitWidth
-    Layout.maximumHeight: implicitHeight
+    Layout.preferredWidth: implicitWidth + (!tasksRoot.vertical ? extraSpan : 0)
+    Layout.preferredHeight: implicitHeight + (tasksRoot.vertical ? extraSpan : 0)
+    Layout.minimumWidth: Layout.preferredWidth
+    Layout.minimumHeight: Layout.preferredHeight
+    Layout.maximumWidth: Layout.preferredWidth
+    Layout.maximumHeight: Layout.preferredHeight
 
     required property var model
     required property int index
@@ -80,7 +104,7 @@ PlasmaCore.ToolTipArea {
     readonly property bool playingAudio: hasAudioStream && audioStreams.some(item => !item.corked)
     readonly property bool muted: hasAudioStream && audioStreams.every(item => item.muted)
 
-    readonly property bool highlighted: (inPopup && activeFocus) || (!inPopup && containsMouse)
+    readonly property bool highlighted: (inPopup && activeFocus) || (!inPopup && isTaskHovered)
         || (task.contextMenu && task.contextMenu.status === PlasmaExtras.Menu.Open)
         || (!!tasksRoot.groupDialog && tasksRoot.groupDialog.visualParent === task)
 
@@ -245,12 +269,18 @@ PlasmaCore.ToolTipArea {
         }
     }
 
-    onContainsMouseChanged: {
-        if (containsMouse) {
+    onIsTaskHoveredChanged: {
+        if (isTaskHovered) {
             task.forceActiveFocus(Qt.MouseFocusReason);
             task.updateMainItemBindings();
+            if (tasksRoot) {
+                tasksRoot.setHoveredTask(index);
+            }
         } else {
             tasksRoot.toolTipOpenedByClick = null;
+            if (tasksRoot) {
+                tasksRoot.clearHoveredTask(index);
+            }
         }
     }
 
@@ -470,6 +500,7 @@ PlasmaCore.ToolTipArea {
         acceptedButtons: Qt.RightButton
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
         gesturePolicy: TapHandler.WithinBounds // Release grab when menu appears
+        margin: (!inPopup && task.currentScale > 1.0) ? Math.round(task.currentHoverLift + 10) : 0
         onPressedChanged: if (pressed) contextMenuTimer.start()
     }
 
@@ -482,6 +513,7 @@ PlasmaCore.ToolTipArea {
     TapHandler {
         id: leftTapHandler
         acceptedButtons: Qt.LeftButton
+        margin: (!inPopup && task.currentScale > 1.0) ? Math.round(task.currentHoverLift + 10) : 0
         onTapped: (eventPoint, button) => leftClick()
 
         function leftClick(): void {
@@ -639,6 +671,12 @@ PlasmaCore.ToolTipArea {
             source: task.model.decoration
         }
 
+        HoverHandler {
+            id: iconHoverHandler
+            enabled: !task.inPopup
+            margin: task.hoverMargin
+        }
+
         states: [
             // Using a state transition avoids a binding loop between label.visible and
             // the text label margin, which derives from the icon width.
@@ -648,26 +686,35 @@ PlasmaCore.ToolTipArea {
 
                 AnchorChanges {
                     target: iconBox
-                    anchors.left: undefined
-                    anchors.top: undefined
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+                    anchors.right: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.right : undefined
+                    anchors.top: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+                    anchors.bottom: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+                    anchors.horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
+                    anchors.verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
                 }
 
                 PropertyChanges {
                     iconBox.anchors.leftMargin: 0
                     iconBox.anchors.topMargin: 0
-                    iconBox.width: tasksRoot.iconSize
-                    iconBox.height: tasksRoot.iconSize
+                    iconBox.width: Math.round(tasksRoot.iconSize * task.currentScale)
+                    iconBox.height: Math.round(tasksRoot.iconSize * task.currentScale)
                 }
             }
         ]
 
-        transform: Translate {
-            id: bounceTranslate
-            x: 0
-            y: 0
-        }
+        transform: [
+            Translate {
+                id: bounceTranslate
+                x: 0
+                y: 0
+            },
+            Translate {
+                id: hoverTranslate
+                x: tasksRoot.vertical ? (Plasmoid.location === PlasmaCore.Types.LeftEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
+                y: !tasksRoot.vertical ? (Plasmoid.location === PlasmaCore.Types.TopEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
+            }
+        ]
     }
 
     property bool testBounce: false
@@ -765,20 +812,20 @@ PlasmaCore.ToolTipArea {
         }
 
         anchors {
-            horizontalCenter: tasksRoot.vertical ? undefined : iconBox.horizontalCenter
-            verticalCenter: tasksRoot.vertical ? iconBox.verticalCenter : undefined
+            horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
+            verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
 
-            top: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? iconBox.bottom : undefined
-            topMargin: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? Math.max(1, Math.round((tasksRoot.verticalPadding - height) / 2)) : 0
+            bottom: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+            bottomMargin: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? 2 : 0
 
-            bottom: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? iconBox.top : undefined
-            bottomMargin: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? Math.max(1, Math.round((tasksRoot.verticalPadding - height) / 2)) : 0
+            top: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+            topMargin: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? 2 : 0
 
-            left: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? iconBox.right : undefined
-            leftMargin: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? Math.max(1, Math.round((tasksRoot.horizontalPadding - width) / 2)) : 0
+            left: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+            leftMargin: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? 2 : 0
 
-            right: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? iconBox.left : undefined
-            rightMargin: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? Math.max(1, Math.round((tasksRoot.horizontalPadding - width) / 2)) : 0
+            right: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.right : undefined
+            rightMargin: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? 2 : 0
         }
     }
 
