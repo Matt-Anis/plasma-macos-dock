@@ -30,20 +30,22 @@ PlasmaCore.ToolTipArea {
 
     implicitHeight: inPopup
                     ? TaskManagerApplet.LayoutMetrics.preferredHeightInPopup()
-                    : (tasksRoot.vertical
-                        ? TaskManagerApplet.LayoutMetrics.preferredMinHeight()
-                        : Math.max(tasksRoot.height / Plasmoid.configuration.maxStripes,
-                             TaskManagerApplet.LayoutMetrics.preferredMinHeight()))
-    implicitWidth: tasksRoot.vertical
-        ? Math.max(TaskManagerApplet.LayoutMetrics.preferredMinWidth(), Math.min(TaskManagerApplet.LayoutMetrics.preferredMaxWidth(), tasksRoot.width / Plasmoid.configuration.maxStripes))
-        : 0
+                    : tasksRoot.iconSize
+    implicitWidth: inPopup
+                    ? TaskManagerApplet.LayoutMetrics.preferredMaxWidth()
+                    : tasksRoot.iconSize
 
-    Layout.fillWidth: true
-    Layout.fillHeight: !inPopup
-    Layout.maximumWidth: tasksRoot.vertical
-        ? -1
-        : ((model.IsLauncher && !tasksRoot.iconsOnly) ? tasksRoot.height / taskList.rows : TaskManagerApplet.LayoutMetrics.preferredMaxWidth())
-    Layout.maximumHeight: tasksRoot.vertical ? TaskManagerApplet.LayoutMetrics.preferredMaxHeight() : -1
+    width: implicitWidth
+    height: implicitHeight
+
+    Layout.fillWidth: false
+    Layout.fillHeight: false
+    Layout.preferredWidth: implicitWidth
+    Layout.preferredHeight: implicitHeight
+    Layout.minimumWidth: implicitWidth
+    Layout.minimumHeight: implicitHeight
+    Layout.maximumWidth: implicitWidth
+    Layout.maximumHeight: implicitHeight
 
     required property var model
     required property int index
@@ -535,9 +537,8 @@ PlasmaCore.ToolTipArea {
             topMargin: adjustMargin(false, parent.height, taskFrame.margins.top)
         }
 
-        width: task.inPopup ? Math.max(Kirigami.Units.iconSizes.sizeForLabels, Kirigami.Units.iconSizes.medium) : Math.min(task.parent?.minimumWidth ?? 0, task.height)
-        height: task.inPopup ? width : (parent.height - adjustMargin(false, parent.height, taskFrame.margins.top)
-                 - adjustMargin(false, parent.height, taskFrame.margins.bottom))
+        width: task.inPopup ? Math.max(Kirigami.Units.iconSizes.sizeForLabels, Kirigami.Units.iconSizes.medium) : tasksRoot.iconSize
+        height: width
 
         asynchronous: true
         active: height >= Kirigami.Units.iconSizes.small
@@ -579,14 +580,16 @@ PlasmaCore.ToolTipArea {
                 AnchorChanges {
                     target: iconBox
                     anchors.left: undefined
+                    anchors.top: undefined
                     anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 PropertyChanges {
                     iconBox.anchors.leftMargin: 0
-                    iconBox.width: Math.min(task.parent.minimumWidth, tasksRoot.height)
-                        - iconBox.adjustMargin(true, task.width, taskFrame.margins.left)
-                        - iconBox.adjustMargin(true, task.width, taskFrame.margins.right)
+                    iconBox.anchors.topMargin: 0
+                    iconBox.width: tasksRoot.iconSize
+                    iconBox.height: tasksRoot.iconSize
                 }
             }
         ]

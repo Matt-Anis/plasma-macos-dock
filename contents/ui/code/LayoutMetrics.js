@@ -10,13 +10,17 @@ const iconMargin = Math.round(Kirigami.Units.smallSpacing / 4);
 const labelMargin = Kirigami.Units.smallSpacing;
 
 function horizontalMargins() {
-    const spacingAdjustment = tasks.iconsOnly ? (Kirigami.Settings.tabletMode ? 3 : tasks.plasmoid.configuration.iconSpacing) : 1
-    return (taskFrame.margins.left + taskFrame.margins.right) * (tasks.vertical ? 1 : spacingAdjustment);
+    if (tasks.iconsOnly) {
+        return 0;
+    }
+    return (taskFrame.margins.left + taskFrame.margins.right);
 }
 
 function verticalMargins() {
-    const spacingAdjustment = tasks.iconsOnly ? (Kirigami.Settings.tabletMode ? 3 : tasks.plasmoid.configuration.iconSpacing) : 1
-    return (taskFrame.margins.top + taskFrame.margins.bottom) * (tasks.vertical ? spacingAdjustment : 1);
+    if (tasks.iconsOnly) {
+        return 0;
+    }
+    return (taskFrame.margins.top + taskFrame.margins.bottom);
 }
 
 function adjustMargin(height, margin) {
@@ -49,6 +53,10 @@ function optimumCapacity(width, height) {
 }
 
 function preferredMinWidth() {
+    if (tasks.iconsOnly) {
+        return (tasks.iconSize || 48);
+    }
+
     let width = preferredMinLauncherWidth();
 
     if (!tasks.vertical && !tasks.iconsOnly) {
@@ -62,17 +70,7 @@ function preferredMinWidth() {
 
 function preferredMaxWidth() {
     if (tasks.iconsOnly) {
-        if (tasks.vertical) {
-            if (tasks.width === 0) {
-                return 0
-            }
-            return tasks.width + verticalMargins();
-        } else {
-            if (tasks.height === 0) {
-                return 0
-            }
-            return tasks.height + horizontalMargins();
-        }
+        return (tasks.iconSize || 48);
     }
 
     // Avoid doing a bunch of unnecessary work below in vertical mode
@@ -112,23 +110,22 @@ function preferredMaxWidth() {
 }
 
 function preferredMinHeight() {
+    if (tasks.iconsOnly) {
+        return (tasks.iconSize || 48);
+    }
     // TODO FIXME UPSTREAM: Port to proper font metrics for descenders once we have access to them.
     return Kirigami.Units.iconSizes.sizeForLabels + 4;
 }
 
 function preferredMaxHeight() {
+    if (tasks.iconsOnly) {
+        return (tasks.iconSize || 48);
+    }
     if (tasks.vertical) {
-        let taskPreferredSize = 0;
-        if (tasks.iconsOnly) {
-            taskPreferredSize = tasks.width / maxStripes();
-        } else {
-            taskPreferredSize = Math.max(Kirigami.Units.iconSizes.sizeForLabels,
+        let taskPreferredSize = Math.max(Kirigami.Units.iconSizes.sizeForLabels,
                                          Kirigami.Units.iconSizes.medium);
-        }
         return verticalMargins() +
             Math.min(
-                // Do not allow the preferred icon size to exceed the width of
-                // the vertical task manager.
                 tasks.width / maxStripes(),
                 taskPreferredSize);
     } else {

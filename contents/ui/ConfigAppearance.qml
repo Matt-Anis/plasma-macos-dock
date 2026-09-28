@@ -28,7 +28,8 @@ KCMUtils.SimpleKCM {
     property alias cfg_maxStripes: maxStripes.value
     property alias cfg_forceStripes: forceStripes.checked
     property alias cfg_taskMaxWidth: taskMaxWidth.currentIndex
-    property int cfg_iconSpacing: 0
+    property alias cfg_iconSpacing: iconSpacingSpinBox.value
+    property alias cfg_iconSize: iconSizeSpinBox.value
 
     Component.onCompleted: {
         /* Don't rely on bindings for checking the radiobuttons
@@ -154,48 +155,23 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
-        QQC2.ComboBox {
+        QQC2.SpinBox {
+            id: iconSpacingSpinBox
             visible: root.iconOnly
-            Kirigami.FormData.label: i18nc("@label:listbox", "Spacing between icons:")
-
-            model: [
-                {
-                    "label": i18nc("@item:inlistbox Icon spacing", "Small"),
-                    "spacing": 0
-                },
-                {
-                    "label": i18nc("@item:inlistbox Icon spacing", "Normal"),
-                    "spacing": 1
-                },
-                {
-                    "label": i18nc("@item:inlistbox Icon spacing", "Large"),
-                    "spacing": 3
-                },
-            ]
-
-            textRole: "label"
-            enabled: !Kirigami.Settings.tabletMode
-
-            currentIndex: {
-                if (Kirigami.Settings.tabletMode) {
-                    return 2; // Large
-                }
-
-                switch (root.cfg_iconSpacing) {
-                    case 0: return 0; // Small
-                    case 1: return 1; // Normal
-                    case 3: return 2; // Large
-                }
-            }
-            onActivated: index => {
-                root.cfg_iconSpacing = model[currentIndex]["spacing"];
-            }
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Icon spacing (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.iconSpacing !== undefined ? Plasmoid.configuration.iconSpacing : 4
         }
 
-        QQC2.Label {
-            visible: Kirigami.Settings.tabletMode
-            text: i18nc("@info:usagetip under a set of radio buttons when Touch Mode is on", "Automatically set to Large when in Touch mode")
-            font: Kirigami.Theme.smallFont
+        QQC2.SpinBox {
+            id: iconSizeSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Icon size (px):")
+            from: 24
+            to: 256
+            stepSize: 4
+            value: Plasmoid.configuration.iconSize || 48
         }
     }
 }

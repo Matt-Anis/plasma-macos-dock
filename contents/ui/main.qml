@@ -44,7 +44,10 @@ PlasmoidItem {
 
     preferredRepresentation: fullRepresentation
 
-    Plasmoid.constraintHints: Plasmoid.CanFillArea
+    readonly property int iconSize: Plasmoid.configuration.iconSize || 48
+    readonly property int iconSpacing: (Plasmoid.configuration.iconSpacing !== undefined && Plasmoid.configuration.iconSpacing >= 0)
+        ? Plasmoid.configuration.iconSpacing
+        : 4
 
     Plasmoid.onUserConfiguringChanged: {
         if (Plasmoid.userConfiguring && groupDialog !== null) {
@@ -52,41 +55,26 @@ PlasmoidItem {
         }
     }
 
-    Layout.fillWidth: vertical ? true : Plasmoid.configuration.fill
-    Layout.fillHeight: !vertical ? true : Plasmoid.configuration.fill
-    Layout.minimumWidth: {
+    Layout.fillWidth: false
+    Layout.fillHeight: false
+
+    implicitWidth: {
         if (shouldShrinkToZero) {
-            return Kirigami.Units.gridUnit; // For edit mode
+            return Kirigami.Units.gridUnit;
         }
-        return vertical ? 0 : TaskManagerApplet.LayoutMetrics.preferredMinWidth();
+        return vertical ? iconSize : taskList.implicitWidth;
     }
-    Layout.minimumHeight: {
+    implicitHeight: {
         if (shouldShrinkToZero) {
-            return Kirigami.Units.gridUnit; // For edit mode
+            return Kirigami.Units.gridUnit;
         }
-        return !vertical ? 0 : TaskManagerApplet.LayoutMetrics.preferredMinHeight();
+        return vertical ? taskList.implicitHeight : iconSize;
     }
 
-//BEGIN TODO: this is not precise enough: launchers are smaller than full tasks
-    Layout.preferredWidth: {
-        if (shouldShrinkToZero) {
-            return 0.01;
-        }
-        if (vertical) {
-            return Kirigami.Units.gridUnit * 10;
-        }
-        return taskList.Layout.maximumWidth
-    }
-    Layout.preferredHeight: {
-        if (shouldShrinkToZero) {
-            return 0.01;
-        }
-        if (vertical) {
-            return taskList.Layout.maximumHeight
-        }
-        return Kirigami.Units.gridUnit * 2;
-    }
-//END TODO
+    Layout.minimumWidth: implicitWidth
+    Layout.minimumHeight: implicitHeight
+    Layout.preferredWidth: implicitWidth
+    Layout.preferredHeight: implicitHeight
 
     property Item dragSource
 
@@ -420,10 +408,7 @@ PlasmoidItem {
             }
 
             LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
-            anchors {
-                left: parent.left
-                top: parent.top
-            }
+            anchors.centerIn: parent
 
             height: taskList.height
             width: taskList.width
@@ -432,54 +417,17 @@ PlasmoidItem {
                 id: taskList
 
                 LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
-                anchors {
-                    left: parent.left
-                    top: parent.top
-                }
+                anchors.centerIn: parent
 
                 count: tasksModel.count
 
                 readonly property real widthOccupation: taskRepeater.count / columns
                 readonly property real heightOccupation: taskRepeater.count / rows
 
-                Layout.maximumWidth: {
-                    const totalMaxWidth = children.reduce((accumulator, child) => {
-                            if (!isFinite(child.Layout.maximumWidth)) {
-                                return accumulator;
-                            }
-                            return accumulator + child.Layout.maximumWidth
-                        }, 0);
-                    return Math.round(totalMaxWidth / widthOccupation);
-                }
-                Layout.maximumHeight: {
-                    const totalMaxHeight = children.reduce((accumulator, child) => {
-                            if (!isFinite(child.Layout.maximumHeight)) {
-                                return accumulator;
-                            }
-                            return accumulator + child.Layout.maximumHeight
-                        }, 0);
-                    return Math.round(totalMaxHeight / heightOccupation);
-                }
-                width: {
-                    if (tasks.shouldShrinkToZero) {
-                        return 0;
-                    }
-                    if (tasks.vertical) {
-                        return tasks.width * Math.min(1, widthOccupation);
-                    } else {
-                        return Math.min(tasks.width, Layout.maximumWidth);
-                    }
-                }
-                height: {
-                    if (tasks.shouldShrinkToZero) {
-                        return 0;
-                    }
-                    if (tasks.vertical) {
-                        return Math.min(tasks.height, Layout.maximumHeight);
-                    } else {
-                        return tasks.height * Math.min(1, heightOccupation);
-                    }
-                }
+                Layout.maximumWidth: implicitWidth
+                Layout.maximumHeight: implicitHeight
+                width: tasks.shouldShrinkToZero ? 0 : implicitWidth
+                height: tasks.shouldShrinkToZero ? 0 : implicitHeight
 
                 flow: {
                     if (tasks.vertical) {

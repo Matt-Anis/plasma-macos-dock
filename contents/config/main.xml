@@ -151,8 +151,12 @@
       <default>false</default>
     </entry>
     <entry name="iconSpacing" type="Int">
-      <label> Spacing between icons in task manager. Margin is multiplied by this value.</label>
-      <default>1</default>
+      <label>Spacing between icons in pixels.</label>
+      <default>4</default>
+    </entry>
+    <entry name="iconSize" type="Int">
+      <label>Base size for icons in the dock.</label>
+      <default>48</default>
     </entry>
   </group>
 

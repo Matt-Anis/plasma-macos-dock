@@ -14,8 +14,8 @@ import plasma.applet.org.kde.plasma.taskmanager as TaskManagerApplet
 GridLayout {
     property bool animating: false
 
-    rowSpacing: 0
-    columnSpacing: 0
+    rowSpacing: vertical ? tasks.iconSpacing : 0
+    columnSpacing: vertical ? 0 : tasks.iconSpacing
 
     property int animationsRunning: 0
     onAnimationsRunningChanged: {
