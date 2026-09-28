@@ -1,0 +1,22 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Matt Anis"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "macOS-style dock and task manager",
+        "EnabledByDefault": true,
+        "Icon": "preferences-system-windows",
+        "Id": "com.github.mattanis.macosdock",
+        "License": "GPL-2.0+",
+        "Name": "macOS Dock",
+        "Website": "https://github.com/Matt-Anis/plasma-macos-dock"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.multitasking"
+    ]
+}
