@@ -30,6 +30,10 @@ KCMUtils.SimpleKCM {
     property alias cfg_taskMaxWidth: taskMaxWidth.currentIndex
     property alias cfg_iconSpacing: iconSpacingSpinBox.value
     property alias cfg_iconSize: iconSizeSpinBox.value
+    property alias cfg_horizontalPadding: horizontalPaddingSpinBox.value
+    property alias cfg_verticalPadding: verticalPaddingSpinBox.value
+    property alias cfg_elevation: elevationSpinBox.value
+    property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
 
     Component.onCompleted: {
         /* Don't rely on bindings for checking the radiobuttons
@@ -172,6 +176,40 @@ KCMUtils.SimpleKCM {
             to: 256
             stepSize: 4
             value: Plasmoid.configuration.iconSize || 48
+        }
+
+        QQC2.SpinBox {
+            id: horizontalPaddingSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Horizontal padding (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.horizontalPadding !== undefined ? Plasmoid.configuration.horizontalPadding : 10
+        }
+
+        QQC2.SpinBox {
+            id: verticalPaddingSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Vertical padding (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.verticalPadding !== undefined ? Plasmoid.configuration.verticalPadding : 6
+        }
+
+        QQC2.SpinBox {
+            id: elevationSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Elevation offset (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.elevation !== undefined ? Plasmoid.configuration.elevation : 8
+        }
+
+        QQC2.CheckBox {
+            id: autoAdjustPanelThicknessCheckBox
+            Kirigami.FormData.label: i18nc("@label:checkbox", "Panel thickness:")
+            text: i18nc("@option:check", "Auto-adjust panel thickness to fit dock")
+            checked: Plasmoid.configuration.autoAdjustPanelThickness !== undefined ? Plasmoid.configuration.autoAdjustPanelThickness : true
         }
     }
 }

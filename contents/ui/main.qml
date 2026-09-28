@@ -48,33 +48,81 @@ PlasmoidItem {
     readonly property int iconSpacing: (Plasmoid.configuration.iconSpacing !== undefined && Plasmoid.configuration.iconSpacing >= 0)
         ? Plasmoid.configuration.iconSpacing
         : 4
+    readonly property int horizontalPadding: Plasmoid.configuration.horizontalPadding !== undefined
+        ? Plasmoid.configuration.horizontalPadding
+        : 10
+    readonly property int verticalPadding: Plasmoid.configuration.verticalPadding !== undefined
+        ? Plasmoid.configuration.verticalPadding
+        : 6
+    readonly property int elevation: Plasmoid.configuration.elevation !== undefined
+        ? Plasmoid.configuration.elevation
+        : 8
+    readonly property bool autoAdjustPanelThickness: Plasmoid.configuration.autoAdjustPanelThickness !== undefined
+        ? Plasmoid.configuration.autoAdjustPanelThickness
+        : true
+
+    readonly property int targetThickness: vertical
+        ? (iconSize + horizontalPadding * 2 + elevation)
+        : (iconSize + verticalPadding * 2 + elevation)
+
+    readonly property int tasksCount: tasksModel.count
+    readonly property real tasksLength: tasksCount > 0
+        ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * iconSpacing)
+        : 0
+
+    readonly property real dockWidth: {
+        if (shouldShrinkToZero) {
+            return Kirigami.Units.gridUnit;
+        }
+        return vertical ? targetThickness : (tasksLength + horizontalPadding * 2);
+    }
+    readonly property real dockHeight: {
+        if (shouldShrinkToZero) {
+            return Kirigami.Units.gridUnit;
+        }
+        return vertical ? (tasksLength + verticalPadding * 2) : targetThickness;
+    }
+
+    width: dockWidth
+    height: dockHeight
+    implicitWidth: dockWidth
+    implicitHeight: dockHeight
+
+    Layout.fillWidth: false
+    Layout.fillHeight: false
+
+    Layout.minimumWidth: dockWidth
+    Layout.maximumWidth: dockWidth
+    Layout.preferredWidth: dockWidth
+    Layout.minimumHeight: dockHeight
+    Layout.maximumHeight: dockHeight
+    Layout.preferredHeight: dockHeight
+
+    // Walk up visual parent hierarchy to disable the native panel background
+    readonly property var containmentItem: {
+        let candidate = tasks.parent;
+        while (candidate) {
+            if (candidate.toString().indexOf("ContainmentItem_QML") > -1) {
+                return candidate;
+            }
+            candidate = candidate.parent;
+        }
+        return null;
+    }
+
+    function applyPanelTransparency() {
+        if (containmentItem && containmentItem.Plasmoid) {
+            containmentItem.Plasmoid.backgroundHints = PlasmaCore.Types.NoBackground;
+        }
+    }
+
+    onContainmentItemChanged: applyPanelTransparency()
 
     Plasmoid.onUserConfiguringChanged: {
         if (Plasmoid.userConfiguring && groupDialog !== null) {
             groupDialog.visible = false;
         }
     }
-
-    Layout.fillWidth: false
-    Layout.fillHeight: false
-
-    implicitWidth: {
-        if (shouldShrinkToZero) {
-            return Kirigami.Units.gridUnit;
-        }
-        return vertical ? iconSize : taskList.implicitWidth;
-    }
-    implicitHeight: {
-        if (shouldShrinkToZero) {
-            return Kirigami.Units.gridUnit;
-        }
-        return vertical ? taskList.implicitHeight : iconSize;
-    }
-
-    Layout.minimumWidth: implicitWidth
-    Layout.minimumHeight: implicitHeight
-    Layout.preferredWidth: implicitWidth
-    Layout.preferredHeight: implicitHeight
 
     property Item dragSource
 
@@ -408,10 +456,33 @@ PlasmoidItem {
             }
 
             LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
-            anchors.centerIn: parent
 
-            height: taskList.height
-            width: taskList.width
+            width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (tasks.tasksLength + tasks.horizontalPadding * 2)
+            height: tasks.vertical ? (tasks.tasksLength + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
+
+            anchors {
+                horizontalCenter: tasks.vertical ? undefined : parent.horizontalCenter
+                verticalCenter: tasks.vertical ? parent.verticalCenter : undefined
+                bottom: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+                bottomMargin: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? tasks.elevation : 0
+                top: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+                topMargin: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? tasks.elevation : 0
+                left: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+                leftMargin: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? tasks.elevation : 0
+                right: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.right : undefined
+                rightMargin: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? tasks.elevation : 0
+            }
+
+            // macOS dock translucent frosted capsule background
+            Rectangle {
+                id: dockBackground
+                anchors.fill: parent
+                radius: Math.min(width, height) / 3
+                color: Qt.rgba(0.12, 0.12, 0.14, 0.65)
+                border.color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                border.width: 1
+                z: -1
+            }
 
             TaskList {
                 id: taskList
@@ -421,13 +492,8 @@ PlasmoidItem {
 
                 count: tasksModel.count
 
-                readonly property real widthOccupation: taskRepeater.count / columns
-                readonly property real heightOccupation: taskRepeater.count / rows
-
-                Layout.maximumWidth: implicitWidth
-                Layout.maximumHeight: implicitHeight
-                width: tasks.shouldShrinkToZero ? 0 : implicitWidth
-                height: tasks.shouldShrinkToZero ? 0 : implicitHeight
+                width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : tasks.tasksLength)
+                height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.tasksLength : tasks.iconSize)
 
                 flow: {
                     if (tasks.vertical) {
@@ -512,6 +578,7 @@ PlasmoidItem {
     Component.onCompleted: {
         TaskManagerApplet.TaskTools.taskManagerInstanceCount += 1;
         requestLayout.connect(iconGeometryTimer.restart);
+        applyPanelTransparency();
     }
 
     Component.onDestruction: {
