@@ -1,5 +1,0 @@
-File=kactivitymanagerd_plugins_settings.kcfg
-ClassName=KActivityManagerdPluginsSettings
-ItemAccessors=true
-Mutators=false
-DefaultValueGetters=false
