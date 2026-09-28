@@ -218,6 +218,14 @@
       <min>0</min>
       <max>32</max>
     </entry>
+    <entry name="zoomAnimationType" type="Enum">
+      <label>Animation type for magnification: 0 = Spring, 1 = Smooth</label>
+      <choices>
+        <choice name="Spring"/>
+        <choice name="Smooth"/>
+      </choices>
+      <default>0</default>
+    </entry>
   </group>
 
 </kcfg>

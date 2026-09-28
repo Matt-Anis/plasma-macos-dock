@@ -44,6 +44,7 @@ KCMUtils.SimpleKCM {
     property real cfg_zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5
     property alias cfg_zoomBlastRadius: zoomBlastRadiusSpinBox.value
     property alias cfg_hoverElevation: hoverElevationSpinBox.value
+    property alias cfg_zoomAnimationType: zoomAnimationTypeComboBox.currentIndex
 
     Component.onCompleted: {
         /* Don't rely on bindings for checking the radiobuttons
@@ -312,6 +313,17 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: i18nc("@label:checkbox", "Magnification:")
             text: i18nc("@option:check", "Magnify icons on hover")
             checked: Plasmoid.configuration.zoomEnabled !== undefined ? Plasmoid.configuration.zoomEnabled : true
+        }
+
+        QQC2.ComboBox {
+            id: zoomAnimationTypeComboBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:combobox", "Animation type:")
+            model: [
+                i18nc("@item:inlistbox", "Spring (Elastic & snappy)"),
+                i18nc("@item:inlistbox", "Smooth (Cubic ease-out)")
+            ]
+            currentIndex: Plasmoid.configuration.zoomAnimationType !== undefined ? Plasmoid.configuration.zoomAnimationType : 0
         }
 
         QQC2.SpinBox {

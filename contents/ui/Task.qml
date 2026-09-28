@@ -34,11 +34,25 @@ PlasmaCore.ToolTipArea {
 
     property real zoomFactor: 0.0
 
+    SpringAnimation {
+        id: springAnim
+        target: task
+        property: "zoomFactor"
+        spring: 3.5
+        damping: 0.35
+        epsilon: 0.002
+    }
+
+    NumberAnimation {
+        id: smoothAnim
+        target: task
+        property: "zoomFactor"
+        duration: 260
+        easing.type: Easing.OutCubic
+    }
+
     Behavior on zoomFactor {
-        NumberAnimation {
-            duration: 260
-            easing.type: Easing.OutCubic
-        }
+        animation: (tasksRoot && tasksRoot.zoomAnimationType === 1) ? smoothAnim : springAnim
     }
 
     onTargetZoomFactorChanged: {
@@ -54,11 +68,12 @@ PlasmaCore.ToolTipArea {
 
     readonly property bool isTaskHovered: (!inPopup && (containsMouse || (taskHoverHandler && taskHoverHandler.hovered)))
 
-    readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * zoomFactor
-    readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * zoomFactor
+    readonly property real effectiveZoom: Math.max(0.0, zoomFactor)
+    readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * effectiveZoom
+    readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * effectiveZoom
     readonly property real extraSpan: (tasksRoot && !inPopup) ? (tasksRoot.iconSize * (currentScale - 1.0) * 0.7) : 0.0
 
-    z: inPopup ? 0 : Math.round(zoomFactor * 100)
+    z: inPopup ? 0 : Math.round(effectiveZoom * 100)
 
     implicitHeight: inPopup
                     ? LayoutMetrics.preferredHeightInPopup()

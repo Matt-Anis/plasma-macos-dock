@@ -81,6 +81,9 @@ PlasmoidItem {
     readonly property int hoverElevation: Plasmoid.configuration.hoverElevation !== undefined
         ? Plasmoid.configuration.hoverElevation
         : 12
+    readonly property int zoomAnimationType: Plasmoid.configuration.zoomAnimationType !== undefined
+        ? Plasmoid.configuration.zoomAnimationType
+        : 0
 
     property int hoveredTaskIndex: -1
 
