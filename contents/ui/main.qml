@@ -119,6 +119,54 @@ PlasmoidItem {
         return null;
     }
 
+    readonly property real panelBottomInset: {
+        if (!containmentItem) {
+            return 0;
+        }
+        try {
+            const p = containmentItem.mapFromItem(tasks, 0, tasks.height);
+            return Math.max(0, containmentItem.height - p.y);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    readonly property real panelTopInset: {
+        if (!containmentItem) {
+            return 0;
+        }
+        try {
+            const p = containmentItem.mapFromItem(tasks, 0, 0);
+            return Math.max(0, p.y);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    readonly property real panelLeftInset: {
+        if (!containmentItem) {
+            return 0;
+        }
+        try {
+            const p = containmentItem.mapFromItem(tasks, 0, 0);
+            return Math.max(0, p.x);
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    readonly property real panelRightInset: {
+        if (!containmentItem) {
+            return 0;
+        }
+        try {
+            const p = containmentItem.mapFromItem(tasks, tasks.width, 0);
+            return Math.max(0, containmentItem.width - p.x);
+        } catch (e) {
+            return 0;
+        }
+    }
+
     function applyPanelTransparency() {
         if (containmentItem && containmentItem.Plasmoid) {
             containmentItem.Plasmoid.backgroundHints = PlasmaCore.Types.NoBackground;
@@ -516,13 +564,13 @@ PlasmoidItem {
                 horizontalCenter: tasks.vertical ? undefined : parent.horizontalCenter
                 verticalCenter: tasks.vertical ? parent.verticalCenter : undefined
                 bottom: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
-                bottomMargin: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? tasks.elevation : 0
+                bottomMargin: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelBottomInset) : 0
                 top: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
-                topMargin: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? tasks.elevation : 0
+                topMargin: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelTopInset) : 0
                 left: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
-                leftMargin: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? tasks.elevation : 0
+                leftMargin: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelLeftInset) : 0
                 right: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.right : undefined
-                rightMargin: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? tasks.elevation : 0
+                rightMargin: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
             // macOS dock translucent frosted capsule background
