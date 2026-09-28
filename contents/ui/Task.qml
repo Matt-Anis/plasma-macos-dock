@@ -45,8 +45,14 @@ PlasmaCore.ToolTipArea {
         zoomFactor = targetZoomFactor;
     }
 
-    readonly property real hoverMargin: Math.round(tasksRoot ? Math.max(tasksRoot.verticalPadding, tasksRoot.iconSpacing * 1.5, 8) : 8)
-    readonly property bool isTaskHovered: (!inPopup && (containsMouse || (iconHoverHandler && iconHoverHandler.hovered)))
+    readonly property real maxElevatedReach: {
+        if (!tasksRoot) return 60;
+        const extraIconHeight = Math.ceil(tasksRoot.iconSize * ((tasksRoot.zoomMultiplier || 1.5) - 1.0));
+        const lift = tasksRoot.hoverElevation !== undefined ? tasksRoot.hoverElevation : 12;
+        return extraIconHeight + lift + 16;
+    }
+
+    readonly property bool isTaskHovered: (!inPopup && (containsMouse || (taskHoverHandler && taskHoverHandler.hovered)))
 
     readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * zoomFactor
     readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * zoomFactor
@@ -512,11 +518,52 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    Item {
+        id: hoverHitBox
+
+        anchors {
+            left: !tasksRoot.vertical ? parent.left : (Plasmoid.location === PlasmaCore.Types.LeftEdge ? parent.left : undefined)
+            right: !tasksRoot.vertical ? parent.right : (Plasmoid.location !== PlasmaCore.Types.LeftEdge ? parent.right : undefined)
+            top: tasksRoot.vertical ? parent.top : (Plasmoid.location === PlasmaCore.Types.TopEdge ? parent.top : undefined)
+            bottom: tasksRoot.vertical ? parent.bottom : (Plasmoid.location !== PlasmaCore.Types.TopEdge ? parent.bottom : undefined)
+
+            topMargin: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge)
+                ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
+            bottomMargin: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge)
+                ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
+            leftMargin: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge)
+                ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
+            rightMargin: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge)
+                ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
+        }
+
+        width: tasksRoot.vertical ? (parent.width + (tasksRoot ? tasksRoot.horizontalPadding : 8) + task.maxElevatedReach) : parent.width
+        height: !tasksRoot.vertical ? (parent.height + (tasksRoot ? tasksRoot.verticalPadding : 8) + task.maxElevatedReach) : parent.height
+
+        HoverHandler {
+            id: taskHoverHandler
+            enabled: !task.inPopup
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            enabled: !task.inPopup
+            onTapped: (eventPoint, button) => leftTapHandler.leftClick()
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+            enabled: !task.inPopup
+            gesturePolicy: TapHandler.WithinBounds
+            onPressedChanged: if (pressed) contextMenuTimer.start()
+        }
+    }
+
     TapHandler {
         acceptedButtons: Qt.RightButton
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
         gesturePolicy: TapHandler.WithinBounds // Release grab when menu appears
-        margin: (!inPopup && task.currentScale > 1.0) ? Math.round(task.currentHoverLift + 10) : 0
         onPressedChanged: if (pressed) contextMenuTimer.start()
     }
 
@@ -529,7 +576,6 @@ PlasmaCore.ToolTipArea {
     TapHandler {
         id: leftTapHandler
         acceptedButtons: Qt.LeftButton
-        margin: (!inPopup && task.currentScale > 1.0) ? Math.round(task.currentHoverLift + 10) : 0
         onTapped: (eventPoint, button) => leftClick()
 
         function leftClick(): void {
@@ -685,12 +731,6 @@ PlasmaCore.ToolTipArea {
             enabled: true
 
             source: task.model.decoration
-        }
-
-        HoverHandler {
-            id: iconHoverHandler
-            enabled: !task.inPopup
-            margin: task.hoverMargin
         }
 
         states: [
