@@ -1,0 +1,6 @@
+GEMINI.md
+
+# Build outputs
+build/
+CMakeLists.txt.user
+*.kdev4
