@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="macOS Dock Logo" width="128" />
+</p>
+
 # macOS Dock-Like Experience for KDE Plasma 6
 
 A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-like experience to your Linux desktop. Built directly on top of KDE's official Icons-Only Task Manager, it transforms the taskbar into a floating, magnified capsule while keeping all native Plasma system integrations, Wayland window management, and application workflows fully intact.
