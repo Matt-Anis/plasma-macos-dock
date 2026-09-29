@@ -898,21 +898,30 @@ PlasmaCore.ToolTipArea {
             ColorAnimation { duration: 200 }
         }
 
+        readonly property real padOffset: {
+            const pad = tasksRoot ? (tasksRoot.vertical ? tasksRoot.horizontalPadding : tasksRoot.verticalPadding) : 8;
+            return Math.max(1, Math.round((pad - height) / 2));
+        }
+
         anchors {
             horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
             verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
 
-            bottom: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
-            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? 2 : 0
+            // Bottom panel: placed below the icon in the bottom padding
+            top: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? padOffset : 0
 
-            top: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
-            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? 2 : 0
+            // Top panel: placed above the icon in the top padding
+            bottom: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? padOffset : 0
 
-            left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
-            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? 2 : 0
+            // Left panel: placed to the left of the icon in the left padding
+            right: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? padOffset : 0
 
-            right: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
-            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? 2 : 0
+            // Right panel: placed to the right of the icon in the right padding
+            left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
+            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? padOffset : 0
         }
     }
 
