@@ -17,12 +17,13 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
   - [Interactive Magnification Wave](#interactive-magnification-wave)
   - [Spring and Smooth Animation Physics](#spring-and-smooth-animation-physics)
   - [Hover Lift Elevation](#hover-lift-elevation)
-  - [Capsule Styling and Custom Colors](#capsule-styling-and-custom-colors)
+  - [Capsule Styling, Native Blur, and Liquid Glass](#capsule-styling-native-blur-and-liquid-glass)
   - [External Running Indicator Dots](#external-running-indicator-dots)
   - [Pinned and Running Tasks Divider](#pinned-and-running-tasks-divider)
   - [All-Edge Screen Placement Support](#all-edge-screen-placement-support)
 - [How It Works and Architectural Decisions](#how-it-works-and-architectural-decisions)
   - [Why Build on Icons-Only Task Manager](#why-build-on-icons-only-task-manager)
+  - [Sub-Region KWin Blur via KWindowEffects](#sub-region-kwin-blur-via-kwindoweffects)
   - [Cosine-Squared Parabolic Wave Math](#cosine-squared-parabolic-wave-math)
   - [Dynamic Layering and Elevated Hitbox Protection](#dynamic-layering-and-elevated-hitbox-protection)
   - [Padding-Anchored Status Dots](#padding-anchored-status-dots)
@@ -36,21 +37,34 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 ## Installation
 
-### Manual Installation from Source
+### Installation from Source (With Blur Support)
 
-1. Clone this repository into your local Plasma plasmoids directory:
+1. Clone this repository:
 
    ```bash
-   git clone https://github.com/Matt-Anis/plasma-macos-dock.git ~/.local/share/plasma/plasmoids/com.github.mattanis.macosdock
+   git clone https://github.com/Matt-Anis/plasma-macos-dock.git
+   cd plasma-macos-dock
    ```
 
-2. Restart Plasma Shell to register the applet:
+2. Build and install the C++ blur module and widget:
+
+   ```bash
+   cmake -B build -S .
+   cmake --build build
+   sudo cmake --install build
+   ```
+
+3. Restart Plasma Shell to load the new QML plugin and widget:
 
    ```bash
    systemctl --user restart plasma-plasmashell
    ```
 
-3. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
+4. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
+
+> [!TIP]
+> **Prefer a lightweight version without C++ build dependencies?**  
+> If you prefer a pure QML/JS version that requires no compilation or build tools, check out the [`without-blur` branch](https://github.com/Matt-Anis/plasma-macos-dock/tree/without-blur).
 
 ---
 
@@ -66,6 +80,13 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 | **KDE Plasma** | `6.0.0+` | **Not compatible with KDE Plasma 5** |
 | **KDE Frameworks (KF6)** | `6.0.0+` | Requires `kirigami`, `ksvg`, `kwindowsystem`, `kcmutils` |
 | **Qt** | `6.6.0+` | Built on Qt 6 Quick layouts and components |
+
+### Build Dependencies
+To compile the native C++ blur module on this branch, ensure your system has development packages installed:
+- `cmake` (>= 3.16) and a C++17 compiler (`gcc-c++` or `clang`)
+- `extra-cmake-modules` (ECM)
+- `kf6-kwindowsystem-devel` (or `libkf6windowsystem-dev`)
+- `qt6-base-devel`, `qt6-declarative-devel`
 
 ### Required Runtime Packages
 Most standard Plasma 6 desktop installations include these by default, but minimal distributions (e.g., minimal Arch, Gentoo, Fedora Minimal) may require installing them explicitly:
@@ -126,14 +147,23 @@ When icons magnify on hover, they can simultaneously lift upward away from the p
 
 - **How to use**: Under **Appearance > Magnification & Animation**, adjust the **Hover lift (px)** spinbox (from 0px up to 32px). Higher values make icons elevate toward the mouse cursor as they scale up.
 
-### Capsule Styling and Custom Colors
+### Capsule Styling, Native Blur, and Liquid Glass
 
-The dock background capsule can be styled as a solid frosted pill, a transparent container, or a custom tinted surface with border outlines.
+The dock background capsule can be styled in four distinct visual modes:
 
-- **How to use**: In dock settings under **Appearance > Capsule & Style**:
-  - Set **Container background** to either **Solid** or **Transparent**.
-  - Click **Choose Color...** next to **Background color** to select any custom background tint or opacity.
-  - Configure **Border thickness (px)** and use **Choose Color...** next to **Border color** to customize the capsule stroke outline.
+- **Solid**: Flat or tinted surface using your chosen custom background color.
+- **Transparent**: Completely invisible container with icons floating directly above the wallpaper.
+- **System Blur**: Uses KWin's compositor to dynamically blur only behind the rounded capsule area (leaving the rest of the transparent panel unblurred).
+- **Liquid Glass**: Combines live KWin background blur with an internal specular gloss sheen, tinted translucency, and a sharp border.
+
+#### Live Blur & Glass Tuning Steppers
+When **System Blur** or **Liquid Glass** is active, you can fine-tune the optical presentation directly from the settings using native steppers:
+- **Capsule opacity**: Stepper from 5% to 95% (step 5%) controlling background tint vs blur passthrough.
+- **Vibrancy (saturation)**: Stepper from 0.0x to 2.0x (step 0.1x) boosting wallpaper color vibrancy behind the blur for an authentic macOS look.
+- **Blur contrast**: Stepper from 0.5x to 1.5x (step 0.1x) adjusting shape contrast behind the glass.
+- **Blur brightness**: Stepper from 0.5x to 1.5x (step 0.1x) adjusting background illumination.
+
+- **How to use**: In dock settings under **Appearance > Capsule & Style**, select your preferred mode in **Container background**. Adjust the border thickness, border color, and blur tuning steppers to taste.
 - **Visual preview**:
 
   ![Capsule Styling](assets/demo/styling.gif)
@@ -168,6 +198,16 @@ The dock works on any screen edge, automatically adjusting its orientation, lift
 Developing a dock as an independent application often leads to window management desynchronization, Wayland protocol incompatibilities, missing system tray coordination, and duplicate resource consumption.
 
 Building directly upon KDE Plasma's `org.kde.plasma.icontasks` keeps all native window tracking, LibTaskManager models, virtual desktop filters, activity assignments, window thumbnails, and MPRIS audio stream controls native to the shell. This delivers an authentic dock experience without third-party daemons or compositor workarounds.
+
+### Sub-Region KWin Blur via KWindowEffects
+
+In Plasma on Wayland, KWin typically applies background blur to entire top-level window surfaces. Because the dock capsule is an elevated floating element inside a larger transparent panel (`NoBackground`), applying window-level blur would create an unseemly rectangular blur slab spanning the full width or height of the screen.
+
+To solve this, the widget incorporates a native C++ QML item (`DockBlurArea`):
+
+1. **Scene Coordinate Mapping**: The item continuously projects its local capsule bounding box and corner radius into the top-level panel window coordinates via `mapRectToScene()`.
+2. **Rounded Polygon Region**: It constructs a precise `QRegion` from a `QPainterPath` rounded rectangle that matches the capsule's dynamic width, height, and corner radius.
+3. **KWin Compositor Hooks**: It passes this region to `KWindowEffects::enableBlurBehind()` and `KWindowEffects::enableBackgroundContrast()`. KWin's compositor blurs and color-tunes strictly behind the capsule pill while keeping the surrounding panel completely transparent.
 
 ### Cosine-Squared Parabolic Wave Math
 
@@ -225,7 +265,7 @@ For the most authentic dock presentation:
 
 ## Known Limitations
 
-- **No Background Blur**: This widget intentionally does not implement background blur out of the box. Custom background blur within Plasma widgets typically depends on external C++ helper plugins, compositor shaders, or third-party tools that complicate installation. Omitting background blur by design keeps this dock lightweight, self-contained, and easy to install on any standard KDE Plasma 6 system without extra dependencies. Another version featuring full background blur and glassmorphism is planned and will be built soon.
+- **No UV Refraction / Background Distortion**: While native background blur, saturation boosting, contrast adjustment, and internal surface gloss are fully supported, optical warping and UV refraction of desktop windows behind the dock are not implemented. Under Wayland, client widgets are strictly isolated from desktop framebuffers for security reasons; reading and distorting background pixels requires writing a low-level C++ KWin compositor effect (`kwin_wayland` plugin). KWin's internal C++ API changes frequently across point releases, and any crash in a compositor effect crashes the user's entire desktop session and logs them out. To keep your system completely stable and safe from session crashes, optical UV distortion of background windows was deliberately omitted.
 
 ---
 

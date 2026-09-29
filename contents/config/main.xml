@@ -175,10 +175,12 @@
       <default>true</default>
     </entry>
     <entry name="containerBackgroundType" type="Enum">
-      <label>Container background type: 0 = Solid, 1 = Transparent</label>
+      <label>Container background type: 0 = Solid, 1 = Transparent, 2 = SystemBlur, 3 = LiquidGlass</label>
       <choices>
         <choice name="Solid"/>
         <choice name="Transparent"/>
+        <choice name="SystemBlur"/>
+        <choice name="LiquidGlass"/>
       </choices>
       <default>0</default>
     </entry>
@@ -195,6 +197,30 @@
     <entry name="containerBorderColor" type="Color">
       <label>Border color of the dock container.</label>
       <default>#38ffffff</default>
+    </entry>
+    <entry name="blurOpacity" type="Double">
+      <label>Opacity / translucency of the dock container background.</label>
+      <default>0.35</default>
+      <min>0.05</min>
+      <max>1.0</max>
+    </entry>
+    <entry name="blurSaturation" type="Double">
+      <label>Color saturation / vibrancy behind the blurred dock.</label>
+      <default>1.3</default>
+      <min>0.0</min>
+      <max>2.0</max>
+    </entry>
+    <entry name="blurContrast" type="Double">
+      <label>Contrast of the background behind the blurred dock.</label>
+      <default>1.0</default>
+      <min>0.5</min>
+      <max>1.5</max>
+    </entry>
+    <entry name="blurBrightness" type="Double">
+      <label>Brightness / intensity of the background behind the blurred dock.</label>
+      <default>1.0</default>
+      <min>0.5</min>
+      <max>1.5</max>
     </entry>
     <entry name="zoomEnabled" type="Bool">
       <label>Enable magnification zoom when hovering over icons.</label>
