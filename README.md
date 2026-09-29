@@ -265,7 +265,7 @@ For the most authentic dock presentation:
 
 ## Known Limitations
 
-- **Desktop Window Refraction**: While native background blur, saturation boosting, contrast adjustment, and internal surface gloss are fully supported, optical warping/distortion of arbitrary desktop windows behind the dock is not implemented. Under Wayland, client widgets are isolated from desktop framebuffers, so distorting background windows would require writing a custom C++ KWin compositor effect that introduces severe session crash risks.
+- **No UV Refraction / Background Distortion**: While native background blur, saturation boosting, contrast adjustment, and internal surface gloss are fully supported, optical warping and UV refraction of desktop windows behind the dock are not implemented. Under Wayland, client widgets are strictly isolated from desktop framebuffers for security reasons; reading and distorting background pixels requires writing a low-level C++ KWin compositor effect (`kwin_wayland` plugin). KWin's internal C++ API changes frequently across point releases, and any crash in a compositor effect crashes the user's entire desktop session and logs them out. To keep your system completely stable and safe from session crashes, optical UV distortion of background windows was deliberately omitted.
 
 ---
 
