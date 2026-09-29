@@ -1,5 +1,6 @@
 /*
     SPDX-FileCopyrightText: 2013 Eike Hein <hein@kde.org>
+    SPDX-FileCopyrightText: 2024 Matt Anis
 
     SPDX-License-Identifier: GPL-2.0-or-later
 */
@@ -21,36 +22,37 @@ KCMUtils.SimpleKCM {
     readonly property bool plasmoidVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool iconOnly: true
 
+    property alias cfg_iconSize: iconSizeSpinBox.value
+    property alias cfg_iconSpacing: iconSpacingSpinBox.value
+    property alias cfg_elevation: elevationSpinBox.value
+    property alias cfg_horizontalPadding: horizontalPaddingSpinBox.value
+    property alias cfg_verticalPadding: verticalPaddingSpinBox.value
+
+    property alias cfg_zoomEnabled: zoomEnabledCheckBox.checked
+    property alias cfg_zoomAnimationType: zoomAnimationTypeComboBox.currentIndex
+    property real cfg_zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5
+    property alias cfg_zoomBlastRadius: zoomBlastRadiusSpinBox.value
+    property alias cfg_hoverElevation: hoverElevationSpinBox.value
+
+    property alias cfg_containerBackgroundType: containerBackgroundTypeComboBox.currentIndex
+    property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
+    property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
+
     property alias cfg_showToolTips: showToolTips.checked
     property alias cfg_highlightWindows: highlightWindows.checked
     property bool cfg_indicateAudioStreams
     property bool cfg_interactiveMute
     property bool cfg_tooltipControls
+
+    // Legacy / fallback bindings to preserve config schema compatibility
     property alias cfg_fill: fill.checked
     property alias cfg_maxStripes: maxStripes.value
     property alias cfg_forceStripes: forceStripes.checked
     property alias cfg_taskMaxWidth: taskMaxWidth.currentIndex
-    property alias cfg_iconSpacing: iconSpacingSpinBox.value
-    property alias cfg_iconSize: iconSizeSpinBox.value
-    property alias cfg_horizontalPadding: horizontalPaddingSpinBox.value
-    property alias cfg_verticalPadding: verticalPaddingSpinBox.value
-    property alias cfg_elevation: elevationSpinBox.value
-    property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
-    property alias cfg_containerBackgroundType: containerBackgroundTypeComboBox.currentIndex
-    property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
-    property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
-    property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
-    property alias cfg_zoomEnabled: zoomEnabledCheckBox.checked
-    property real cfg_zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5
-    property alias cfg_zoomBlastRadius: zoomBlastRadiusSpinBox.value
-    property alias cfg_hoverElevation: hoverElevationSpinBox.value
-    property alias cfg_zoomAnimationType: zoomAnimationTypeComboBox.currentIndex
 
     Component.onCompleted: {
-        /* Don't rely on bindings for checking the radiobuttons
-           When checking forceStripes, the condition for the checked value for the allow stripes button
-           became true and that one got checked instead, stealing the checked state for the just clicked checkbox
-        */
         if (maxStripes.value === 1) {
             forbidStripes.checked = true;
         } else if (!Plasmoid.configuration.forceStripes && maxStripes.value > 1) {
@@ -59,125 +61,14 @@ KCMUtils.SimpleKCM {
             forceStripes.checked = true;
         }
     }
+
     Kirigami.FormLayout {
-        QQC2.CheckBox {
-            id: showToolTips
-            Kirigami.FormData.label: i18nc("@label for several checkboxes", "General:")
-            text: i18nc("@option:check section General", "Show small window previews when hovering over tasks")
-        }
-
-        QQC2.CheckBox {
-            id: highlightWindows
-            text: showToolTips.checked ? i18nc("@option:check section General", "Hide other windows when hovering over previews") : i18nc("@option:check section General", "Hide other windows when hovering over tooltips")
-        }
-
-        QQC2.CheckBox {
-            id: indicateAudioStreams
-            text: i18nc("@option:check section General", "Show an indicator when a task is playing audio")
-            checked: root.cfg_indicateAudioStreams && root.plasmaPaAvailable
-            onToggled: root.cfg_indicateAudioStreams = checked
-            enabled: root.plasmaPaAvailable
-        }
-
-        QQC2.CheckBox {
-            id: interactiveMute
-            leftPadding: mirrored ? 0 : (indicateAudioStreams.indicator.width + indicateAudioStreams.spacing)
-            rightPadding: mirrored ? (indicateAudioStreams.indicator.width + indicateAudioStreams.spacing) : 0
-            text: i18nc("@option:check section General", "Mute task when clicking indicator")
-            checked: root.cfg_interactiveMute && root.plasmaPaAvailable
-            onToggled: root.cfg_interactiveMute = checked
-            enabled: indicateAudioStreams.checked && root.plasmaPaAvailable
-        }
-
-        QQC2.CheckBox {
-            id: tooltipControls
-            text: i18nc("@option:check section General", "Show media and volume controls in tooltip")
-            checked: root.cfg_tooltipControls && root.plasmaPaAvailable
-            onToggled: root.cfg_tooltipControls = checked
-            enabled: root.plasmaPaAvailable
-        }
-
-        QQC2.CheckBox {
-            id: fill
-            text: i18nc("@option:check section General", "Fill free space on panel")
-        }
-
+        // ==========================================
+        // 1. ICONS & DIMENSIONS
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
-            visible: !root.iconOnly
-        }
-
-        QQC2.ComboBox {
-            id: taskMaxWidth
-            visible: !root.iconOnly && !root.plasmoidVertical
-
-            Kirigami.FormData.label: i18nc("@label:listbox", "Maximum task width:")
-
-            model: [
-                i18nc("@item:inlistbox how wide a task item should be", "Narrow"),
-                i18nc("@item:inlistbox how wide a task item should be", "Medium"),
-                i18nc("@item:inlistbox how wide a task item should be", "Wide")
-            ]
-        }
-
-        Item {
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.RadioButton {
-            id: forbidStripes
-            Kirigami.FormData.label: root.plasmoidVertical
-                ? i18nc("@label for radio button group, completes sentence: … when panel is low on space etc.", "Use multi-column view:")
-                : i18nc("@label for radio button group, completes sentence: … when panel is low on space etc.", "Use multi-row view:")
-            onToggled: {
-                if (checked) {
-                    maxStripes.value = 1
-                }
-            }
-            text: i18nc("@option:radio Never use multi-column view for Task Manager", "Never")
-        }
-
-        QQC2.RadioButton {
-            id: allowStripes
-            onToggled: {
-                if (checked) {
-                    maxStripes.value = Math.max(2, maxStripes.value)
-                }
-            }
-            text: i18nc("@option:radio completes sentence: Use multi-column/row view", "When panel is low on space and thick enough")
-        }
-
-        QQC2.RadioButton {
-            id: forceStripes
-            onToggled: {
-                if (checked) {
-                    maxStripes.value = Math.max(2, maxStripes.value)
-                }
-            }
-            text: i18nc("@option:radio completes sentence: Use multi-column/row view", "Always when panel is thick enough")
-        }
-
-        QQC2.SpinBox {
-            id: maxStripes
-            enabled: maxStripes.value > 1
-            Kirigami.FormData.label: root.plasmoidVertical
-                ? i18nc("@label:spinbox maximum number of columns for tasks", "Maximum columns:")
-                : i18nc("@label:spinbox maximum number of rows for tasks", "Maximum rows:")
-            from: 1
-        }
-
-        Item {
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.SpinBox {
-            id: iconSpacingSpinBox
-            visible: root.iconOnly
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Icon spacing (px):")
-            from: 0
-            to: 64
-            stepSize: 1
-            value: Plasmoid.configuration.iconSpacing !== undefined ? Plasmoid.configuration.iconSpacing : 4
+            Kirigami.FormData.label: i18nc("@title:group", "Icons & Dimensions")
         }
 
         QQC2.SpinBox {
@@ -187,6 +78,24 @@ KCMUtils.SimpleKCM {
             to: 256
             stepSize: 4
             value: Plasmoid.configuration.iconSize || 48
+        }
+
+        QQC2.SpinBox {
+            id: iconSpacingSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Icon spacing (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.iconSpacing !== undefined ? Plasmoid.configuration.iconSpacing : 4
+        }
+
+        QQC2.SpinBox {
+            id: elevationSpinBox
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Elevation offset (px):")
+            from: 0
+            to: 64
+            stepSize: 1
+            value: Plasmoid.configuration.elevation !== undefined ? Plasmoid.configuration.elevation : 8
         }
 
         QQC2.SpinBox {
@@ -204,27 +113,85 @@ KCMUtils.SimpleKCM {
             from: 0
             to: 64
             stepSize: 1
-            value: Plasmoid.configuration.verticalPadding !== undefined ? Plasmoid.configuration.verticalPadding : 6
-        }
-
-        QQC2.SpinBox {
-            id: elevationSpinBox
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Elevation offset (px):")
-            from: 0
-            to: 64
-            stepSize: 1
-            value: Plasmoid.configuration.elevation !== undefined ? Plasmoid.configuration.elevation : 8
+            value: Plasmoid.configuration.verticalPadding !== undefined ? Plasmoid.configuration.verticalPadding : 8
         }
 
         QQC2.CheckBox {
-            id: autoAdjustPanelThicknessCheckBox
-            Kirigami.FormData.label: i18nc("@label:checkbox", "Panel thickness:")
-            text: i18nc("@option:check", "Auto-adjust panel thickness to fit dock")
-            checked: Plasmoid.configuration.autoAdjustPanelThickness !== undefined ? Plasmoid.configuration.autoAdjustPanelThickness : true
+            id: fill
+            text: i18nc("@option:check section General", "Fill free space on panel")
         }
 
+        // ==========================================
+        // 2. MAGNIFICATION & ANIMATION
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Magnification & Animation")
+        }
+
+        QQC2.CheckBox {
+            id: zoomEnabledCheckBox
+            Kirigami.FormData.label: i18nc("@label:checkbox", "Magnification:")
+            text: i18nc("@option:check", "Magnify icons on hover")
+            checked: Plasmoid.configuration.zoomEnabled !== undefined ? Plasmoid.configuration.zoomEnabled : true
+        }
+
+        QQC2.ComboBox {
+            id: zoomAnimationTypeComboBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:combobox", "Animation physics:")
+            model: [
+                i18nc("@item:inlistbox", "Spring physics (Elastic & snappy)"),
+                i18nc("@item:inlistbox", "Smooth (Cubic ease-out)")
+            ]
+            currentIndex: Plasmoid.configuration.zoomAnimationType !== undefined ? Plasmoid.configuration.zoomAnimationType : 0
+        }
+
+        QQC2.SpinBox {
+            id: zoomMultiplierSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Zoom scale:")
+            from: 10
+            to: 20
+            stepSize: 1
+            value: Math.round((Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5) * 10)
+            textFromValue: function(value, locale) {
+                return (value / 10.0).toFixed(1) + "x";
+            }
+            valueFromText: function(text, locale) {
+                return Math.round(parseFloat(text) * 10);
+            }
+            onValueChanged: {
+                root.cfg_zoomMultiplier = value / 10.0;
+            }
+        }
+
+        QQC2.SpinBox {
+            id: zoomBlastRadiusSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Blast radius (icons):")
+            from: 1
+            to: 4
+            stepSize: 1
+            value: Plasmoid.configuration.zoomBlastRadius !== undefined ? Plasmoid.configuration.zoomBlastRadius : 2
+        }
+
+        QQC2.SpinBox {
+            id: hoverElevationSpinBox
+            visible: zoomEnabledCheckBox.checked
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Hover lift (px):")
+            from: 0
+            to: 32
+            stepSize: 2
+            value: Plasmoid.configuration.hoverElevation !== undefined ? Plasmoid.configuration.hoverElevation : 12
+        }
+
+        // ==========================================
+        // 3. CAPSULE & STYLE
+        // ==========================================
+        Item {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Capsule & Style")
         }
 
         QQC2.ComboBox {
@@ -304,65 +271,68 @@ KCMUtils.SimpleKCM {
             }
         }
 
+        QQC2.CheckBox {
+            id: autoAdjustPanelThicknessCheckBox
+            Kirigami.FormData.label: i18nc("@label:checkbox", "Panel thickness:")
+            text: i18nc("@option:check", "Auto-adjust panel thickness to fit dock")
+            checked: Plasmoid.configuration.autoAdjustPanelThickness !== undefined ? Plasmoid.configuration.autoAdjustPanelThickness : true
+        }
+
+        // ==========================================
+        // 4. PREVIEWS & INDICATORS
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Previews & Indicators")
         }
 
         QQC2.CheckBox {
-            id: zoomEnabledCheckBox
-            Kirigami.FormData.label: i18nc("@label:checkbox", "Magnification:")
-            text: i18nc("@option:check", "Magnify icons on hover")
-            checked: Plasmoid.configuration.zoomEnabled !== undefined ? Plasmoid.configuration.zoomEnabled : true
+            id: showToolTips
+            Kirigami.FormData.label: i18nc("@label for preview checkboxes", "Window previews:")
+            text: i18nc("@option:check section General", "Show window previews when hovering over tasks")
         }
 
-        QQC2.ComboBox {
-            id: zoomAnimationTypeComboBox
-            visible: zoomEnabledCheckBox.checked
-            Kirigami.FormData.label: i18nc("@label:combobox", "Animation type:")
-            model: [
-                i18nc("@item:inlistbox", "Spring (Elastic & snappy)"),
-                i18nc("@item:inlistbox", "Smooth (Cubic ease-out)")
-            ]
-            currentIndex: Plasmoid.configuration.zoomAnimationType !== undefined ? Plasmoid.configuration.zoomAnimationType : 0
+        QQC2.CheckBox {
+            id: highlightWindows
+            visible: showToolTips.checked
+            text: i18nc("@option:check section General", "Hide other windows when hovering over previews")
         }
 
-        QQC2.SpinBox {
-            id: zoomMultiplierSpinBox
-            visible: zoomEnabledCheckBox.checked
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Zoom multiplier:")
-            from: 10
-            to: 20
-            stepSize: 1
-            value: Math.round((Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5) * 10)
-            textFromValue: function(value, locale) {
-                return (value / 10.0).toFixed(1) + "x";
-            }
-            valueFromText: function(text, locale) {
-                return Math.round(parseFloat(text) * 10);
-            }
-            onValueChanged: {
-                root.cfg_zoomMultiplier = value / 10.0;
-            }
+        QQC2.CheckBox {
+            id: indicateAudioStreams
+            Kirigami.FormData.label: i18nc("@label for audio indicator checkboxes", "Audio indicator:")
+            text: i18nc("@option:check section General", "Show an indicator when a task is playing audio")
+            checked: root.cfg_indicateAudioStreams && root.plasmaPaAvailable
+            onToggled: root.cfg_indicateAudioStreams = checked
+            enabled: root.plasmaPaAvailable
         }
 
-        QQC2.SpinBox {
-            id: zoomBlastRadiusSpinBox
-            visible: zoomEnabledCheckBox.checked
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Blast radius (icons):")
-            from: 1
-            to: 4
-            stepSize: 1
-            value: Plasmoid.configuration.zoomBlastRadius !== undefined ? Plasmoid.configuration.zoomBlastRadius : 2
+        QQC2.CheckBox {
+            id: interactiveMute
+            visible: indicateAudioStreams.checked && root.plasmaPaAvailable
+            text: i18nc("@option:check section General", "Mute task when clicking indicator")
+            checked: root.cfg_interactiveMute && root.plasmaPaAvailable
+            onToggled: root.cfg_interactiveMute = checked
+            enabled: indicateAudioStreams.checked && root.plasmaPaAvailable
         }
 
-        QQC2.SpinBox {
-            id: hoverElevationSpinBox
-            visible: zoomEnabledCheckBox.checked
-            Kirigami.FormData.label: i18nc("@label:spinbox", "Hover elevation (px):")
-            from: 0
-            to: 32
-            stepSize: 2
-            value: Plasmoid.configuration.hoverElevation !== undefined ? Plasmoid.configuration.hoverElevation : 12
+        QQC2.CheckBox {
+            id: tooltipControls
+            Kirigami.FormData.label: i18nc("@label for media controls checkbox", "Media controls:")
+            text: i18nc("@option:check section General", "Show media and volume controls in tooltip")
+            checked: root.cfg_tooltipControls && root.plasmaPaAvailable
+            onToggled: root.cfg_tooltipControls = checked
+            enabled: root.plasmaPaAvailable
+        }
+
+        // Hidden controls to maintain compatibility with Plasmoid configuration bindings
+        Item {
+            visible: false
+            QQC2.ComboBox { id: taskMaxWidth; model: [] }
+            QQC2.RadioButton { id: forbidStripes }
+            QQC2.RadioButton { id: allowStripes }
+            QQC2.RadioButton { id: forceStripes }
+            QQC2.SpinBox { id: maxStripes; value: 1 }
         }
     }
 }

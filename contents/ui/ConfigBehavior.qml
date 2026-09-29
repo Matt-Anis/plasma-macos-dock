@@ -1,5 +1,6 @@
 /*
     SPDX-FileCopyrightText: 2013 Eike Hein <hein@kde.org>
+    SPDX-FileCopyrightText: 2024 Matt Anis
 
     SPDX-License-Identifier: GPL-2.0-or-later
 */
@@ -63,6 +64,14 @@ KCMUtils.SimpleKCM {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        // ==========================================
+        // 1. GROUPING & SORTING
+        // ==========================================
+        Item {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Grouping & Sorting")
+        }
+
         QQC2.ComboBox {
             id: groupingStrategy
             Kirigami.FormData.label: i18nc("@label:listbox how to group tasks", "Group:")
@@ -92,6 +101,7 @@ KCMUtils.SimpleKCM {
             Accessible.name: currentText
             Accessible.onPressAction: currentIndex = currentIndex === count - 1 ? 0 : (currentIndex + 1)
         }
+
         // "You asked for Window View but Window View is not available" message
         Kirigami.InlineMessage {
             Layout.fillWidth: true
@@ -100,33 +110,9 @@ KCMUtils.SimpleKCM {
             text: i18nc("@info displayed as InlineMessage", "The compositor does not support displaying windows side by side, so a textual list will be displayed instead.")
         }
 
-        Item {
-            Kirigami.FormData.isSection: true
-        }
-
-        QQC2.CheckBox {
-            id: groupPopups
-            visible: !root.iconOnly
-            text: i18nc("@option:check grouped task", "Combine into single button")
-            enabled: groupingStrategy.currentIndex > 0
-        }
-
-        QQC2.CheckBox {
-            id: onlyGroupWhenFull
-            visible: !root.iconOnly
-            text: i18nc("@option:check grouped task","Group only when the Task Manager is full")
-            enabled: groupingStrategy.currentIndex > 0 && groupPopups.checked
-            Accessible.onPressAction: toggle()
-        }
-
-        Item {
-            Kirigami.FormData.isSection: true
-            visible: !root.iconOnly
-        }
-
         QQC2.ComboBox {
             id: sortingStrategy
-            Kirigami.FormData.label: i18nc("@label:listbox sort tasks in grouped task", "Sort:")
+            Kirigami.FormData.label: i18nc("@label:listbox sort tasks in grouped task", "Sort order:")
             Layout.fillWidth: true
             Layout.minimumWidth: Kirigami.Units.gridUnit * 14
             textRole: "text"
@@ -161,22 +147,12 @@ KCMUtils.SimpleKCM {
             Component.onCompleted: currentIndex = indexOfValue(root.cfg_sortingStrategy)
         }
 
-        QQC2.CheckBox {
-            id: separateLaunchers
-            visible: !root.iconOnly
-            text: i18nc("@option:check configure task sorting", "Keep launchers separate")
-            enabled: sortingStrategy.currentValue === TaskManager.TasksModel.SortManual
-        }
-
-        QQC2.CheckBox {
-            id: hideLauncherOnStart
-            visible: !root.iconOnly
-            text: i18nc("@option:check for icons-and-text task manager", "Hide launchers after application startup")
-        }
-
+        // ==========================================
+        // 2. MOUSE ACTIONS
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
-            visible: !root.iconOnly
+            Kirigami.FormData.label: i18nc("@title:group", "Mouse Actions")
         }
 
         QQC2.CheckBox {
@@ -187,7 +163,7 @@ KCMUtils.SimpleKCM {
 
         QQC2.ComboBox {
             id: middleClickAction
-            Kirigami.FormData.label: i18nc("@label:listbox completes sentence like: … does nothing", "Middle-clicking any task:")
+            Kirigami.FormData.label: i18nc("@label:listbox completes sentence like: … does nothing", "Middle-click:")
             Layout.fillWidth: true
             Layout.minimumWidth: Kirigami.Units.gridUnit * 14
             model: [
@@ -200,13 +176,9 @@ KCMUtils.SimpleKCM {
             ]
         }
 
-        Item {
-            Kirigami.FormData.isSection: true
-        }
-
         QQC2.ComboBox {
             id: wheelEnabled
-            Kirigami.FormData.label: i18nc("@label:listbox Part of a sentence: 'Scrolling behavior does nothing/cycles through tasks/cycles through the selected task's windows/adjusts the hovered task’s volume''", "Scrolling behavior:")
+            Kirigami.FormData.label: i18nc("@label:listbox", "Mouse wheel scroll:")
             Layout.fillWidth: true
             Layout.minimumWidth: Kirigami.Units.gridUnit * 14
             model: [
@@ -219,19 +191,27 @@ KCMUtils.SimpleKCM {
 
         QQC2.CheckBox {
             id: wheelSkipMinimized
-            leftPadding: mirrored ? 0 : (wheelEnabled.indicator.width + wheelEnabled.spacing)
-            rightPadding: mirrored ? (wheelEnabled.indicator.width + wheelEnabled.spacing) : 0
-            text: i18nc("@option:check mouse wheel task cycling", "Skip minimized tasks")
-            enabled: wheelEnabled.currentIndex !== 0 // None
+            visible: wheelEnabled.currentIndex !== 0
+            text: i18nc("@option:check mouse wheel task cycling", "Skip minimized tasks when scrolling")
+            enabled: wheelEnabled.currentIndex !== 0
         }
 
+        // ==========================================
+        // 3. FILTERS & VISIBILITY
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Filters & Visibility")
+        }
+
+        QQC2.CheckBox {
+            id: showOnlyCurrentScreen
+            Kirigami.FormData.label: i18nc("@label for checkbox group", "Show only tasks:")
+            text: i18nc("@option:check completes sentence: show only tasks", "From the current screen")
         }
 
         QQC2.CheckBox {
             id: showOnlyCurrentDesktop
-            Kirigami.FormData.label: i18nc("@label for checkbox group, completes sentence like: … from current screen", "Show only tasks:")
             text: i18nc("@option:check completes sentence: show only tasks", "From the current desktop")
         }
 
@@ -241,30 +221,25 @@ KCMUtils.SimpleKCM {
         }
 
         QQC2.CheckBox {
-            id: showOnlyCurrentScreen
-            text: i18nc("@option:check completes sentence: show only tasks", "From the current screen")
-        }
-
-        QQC2.CheckBox {
             id: showOnlyMinimized
             text: i18nc("@option:check completes sentence: show only tasks", "That are minimized")
         }
 
+        // ==========================================
+        // 4. PANEL & LAYOUT DIRECTION
+        // ==========================================
         Item {
             Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18nc("@title:group", "Panel & Layout Direction")
         }
 
         QQC2.CheckBox {
             id: unhideOnAttention
-            Kirigami.FormData.label: i18nc("@label for checkbox, completes sentence: … unhide if window wants attention", "When panel is hidden:")
-            text: i18nc("@option:check completes sentence: When panel is hidden", "Unhide when a window wants attention")
+            Kirigami.FormData.label: i18nc("@label for checkbox", "Attention:")
+            text: i18nc("@option:check completes sentence: When panel is hidden", "Unhide panel when a window requests attention")
             onToggled: {
                 annoyingAppWorkaroundMessage.visible = !unhideOnAttention.checked;
             }
-        }
-
-        Item {
-            Kirigami.FormData.isSection: true
         }
 
         QQC2.ButtonGroup {
@@ -272,17 +247,16 @@ KCMUtils.SimpleKCM {
         }
 
         QQC2.RadioButton {
-            Kirigami.FormData.label: i18nc("@label for radiobutton group completes sentence like: … on the bottom", "New tasks appear:")
+            Kirigami.FormData.label: i18nc("@label for radiobutton group", "Task layout order:")
             checked: !reverseMode.checked
             text: {
                 if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
-                    return i18nc("@option:check completes sentence: New tasks appear", "On the bottom")
+                    return i18nc("@option:check completes sentence: New tasks appear", "Top to bottom");
                 }
-                // horizontal
                 if (Application.layoutDirection === Qt.LeftToRight) {
-                    return i18nc("@option:check completes sentence: New tasks appear", "To the right");
+                    return i18nc("@option:check completes sentence: New tasks appear", "Left to right");
                 } else {
-                    return i18nc("@option:check completes sentence: New tasks appear", "To the left")
+                    return i18nc("@option:check completes sentence: New tasks appear", "Right to left");
                 }
             }
             QQC2.ButtonGroup.group: reverseModeRadioButtonGroup
@@ -293,16 +267,24 @@ KCMUtils.SimpleKCM {
             checked: Plasmoid.configuration.reverseMode === true
             text: {
                 if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
-                    return i18nc("@option:check completes sentence: New tasks appear", "On the top")
+                    return i18nc("@option:check completes sentence: New tasks appear", "Bottom to top");
                 }
-                // horizontal
                 if (Application.layoutDirection === Qt.LeftToRight) {
-                    return i18nc("@option:check completes sentence: New tasks appear", "To the left");
+                    return i18nc("@option:check completes sentence: New tasks appear", "Right to left");
                 } else {
-                    return i18nc("@option:check completes sentence: New tasks appear", "To the right");
+                    return i18nc("@option:check completes sentence: New tasks appear", "Left to right");
                 }
             }
             QQC2.ButtonGroup.group: reverseModeRadioButtonGroup
+        }
+
+        // Hidden controls to maintain compatibility with Plasmoid configuration bindings
+        Item {
+            visible: false
+            QQC2.CheckBox { id: groupPopups; enabled: false }
+            QQC2.CheckBox { id: onlyGroupWhenFull; enabled: false }
+            QQC2.CheckBox { id: separateLaunchers; enabled: false }
+            QQC2.CheckBox { id: hideLauncherOnStart; enabled: false }
         }
     }
 }
