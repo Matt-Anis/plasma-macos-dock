@@ -62,6 +62,10 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 4. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
 
+> [!TIP]
+> **Prefer a lightweight version without C++ build dependencies?**  
+> If you prefer a pure QML/JS version that requires no compilation or build tools, check out the [`without-blur` branch](https://github.com/Matt-Anis/plasma-macos-dock/tree/without-blur).
+
 ---
 
 ## Compatibility
