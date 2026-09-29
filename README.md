@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="macOS Dock Logo" width="128" />
+  <img src="assets/logo.png" alt="macOS Dock Logo" width="256" />
 </p>
 
 # macOS Dock-Like Experience for KDE Plasma 6
