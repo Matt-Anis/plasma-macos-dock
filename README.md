@@ -9,6 +9,7 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 ## Table of Contents
 
 - [Installation](#installation)
+- [Compatibility](#compatibility)
 - [Introduction](#introduction)
 - [Features](#features)
   - [Custom Icon Sizing and Spacing](#custom-icon-sizing-and-spacing)
@@ -50,6 +51,29 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
    ```
 
 3. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
+
+---
+
+## Compatibility
+
+> [!WARNING]
+> **Testing Status**: This widget was developed and **tested exclusively on KDE Plasma 6.6**. While it is built to target baseline Plasma 6 specifications, backward compatibility with older point releases (Plasma 6.0 through 6.5) is theoretical and has not yet been verified across different distributions. If you encounter issues on earlier Plasma 6 versions, please report them!
+
+### Requirements
+
+| Component | Minimum Version | Notes |
+| :--- | :--- | :--- |
+| **KDE Plasma** | `6.0.0+` | **Not compatible with KDE Plasma 5** |
+| **KDE Frameworks (KF6)** | `6.0.0+` | Requires `kirigami`, `ksvg`, `kwindowsystem`, `kcmutils` |
+| **Qt** | `6.6.0+` | Built on Qt 6 Quick layouts and components |
+
+### Required Runtime Packages
+Most standard Plasma 6 desktop installations include these by default, but minimal distributions (e.g., minimal Arch, Gentoo, Fedora Minimal) may require installing them explicitly:
+
+- `qt6-5compat` (provides `Qt5Compat.GraphicalEffects` for shader fallbacks)
+- `plasma-workspace` (provides `libtaskmanager`, DBus helpers, and MPRIS controls)
+- `plasma-pa` (provides audio stream indicators on task badges)
+- `kpipewire` (provides live window preview thumbnails)
 
 ---
 
