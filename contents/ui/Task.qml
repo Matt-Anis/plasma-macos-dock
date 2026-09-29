@@ -73,6 +73,10 @@ PlasmaCore.ToolTipArea {
     readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * effectiveZoom
     readonly property real extraSpan: (tasksRoot && !inPopup) ? (tasksRoot.iconSize * (currentScale - 1.0) * 0.7) : 0.0
 
+    readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
+    readonly property bool isDividerTask: tasksRoot && tasksRoot.hasDivider && tasksRoot.firstUnpinnedIndex === index
+    readonly property int dividerOffset: isDividerTask ? tasksRoot.dividerSpan : 0
+
     z: inPopup ? 0 : Math.round(effectiveZoom * 100)
 
     implicitHeight: inPopup
@@ -87,8 +91,8 @@ PlasmaCore.ToolTipArea {
 
     Layout.fillWidth: false
     Layout.fillHeight: false
-    Layout.preferredWidth: implicitWidth + (!tasksRoot.vertical ? extraSpan : 0)
-    Layout.preferredHeight: implicitHeight + (tasksRoot.vertical ? extraSpan : 0)
+    Layout.preferredWidth: implicitWidth + (!tasksRoot.vertical ? (extraSpan + dividerOffset) : 0)
+    Layout.preferredHeight: implicitHeight + (tasksRoot.vertical ? (extraSpan + dividerOffset) : 0)
     Layout.minimumWidth: Layout.preferredWidth
     Layout.minimumHeight: Layout.preferredHeight
     Layout.maximumWidth: Layout.preferredWidth
@@ -784,6 +788,8 @@ PlasmaCore.ToolTipArea {
                 PropertyChanges {
                     iconBox.anchors.leftMargin: 0
                     iconBox.anchors.topMargin: 0
+                    iconBox.anchors.horizontalCenterOffset: (!tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
+                    iconBox.anchors.verticalCenterOffset: (tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
                     iconBox.width: Math.round(tasksRoot.iconSize * task.currentScale)
                     iconBox.height: Math.round(tasksRoot.iconSize * task.currentScale)
                 }
@@ -905,7 +911,9 @@ PlasmaCore.ToolTipArea {
 
         anchors {
             horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
+            horizontalCenterOffset: (!tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
             verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
+            verticalCenterOffset: (tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
 
             // Bottom panel: placed below the icon in the bottom padding
             top: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
@@ -922,6 +930,29 @@ PlasmaCore.ToolTipArea {
             // Right panel: placed to the right of the icon in the right padding
             left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
             leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? padOffset : 0
+        }
+    }
+
+    Rectangle {
+        id: dockDivider
+        visible: task.isDividerTask && !task.inPopup
+        z: -1
+
+        width: tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
+        height: !tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
+        radius: 0.5
+        color: Qt.rgba(1.0, 1.0, 1.0, 0.28)
+
+        anchors {
+            // Horizontal dock: center vertically in capsule, position at left + dividerSpan/2
+            verticalCenter: !tasksRoot.vertical ? parent.verticalCenter : undefined
+            left: !tasksRoot.vertical ? parent.left : undefined
+            leftMargin: !tasksRoot.vertical ? Math.round(tasksRoot.dividerSpan / 2) : 0
+
+            // Vertical dock: center horizontally in capsule, position at top + dividerSpan/2
+            horizontalCenter: tasksRoot.vertical ? parent.horizontalCenter : undefined
+            top: tasksRoot.vertical ? parent.top : undefined
+            topMargin: tasksRoot.vertical ? Math.round(tasksRoot.dividerSpan / 2) : 0
         }
     }
 

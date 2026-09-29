@@ -162,9 +162,23 @@ PlasmoidItem {
         ? (iconSize + horizontalPadding * 2 + elevation)
         : (iconSize + verticalPadding * 2 + elevation)
 
+    readonly property int dividerSpan: 16
+
+    readonly property int firstUnpinnedIndex: {
+        for (let i = 0; i < taskRepeater.count; ++i) {
+            const item = taskRepeater.itemAt(i) as Task;
+            if (item && item.model && !item.isPinned) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    readonly property bool hasDivider: firstUnpinnedIndex > 0
+
     readonly property int tasksCount: tasksModel.count
     readonly property real tasksLength: tasksCount > 0
-        ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * iconSpacing)
+        ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * iconSpacing + (hasDivider ? dividerSpan : 0))
         : 0
 
     readonly property real maxExtraSpan: {
