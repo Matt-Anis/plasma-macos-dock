@@ -225,7 +225,7 @@ For the most authentic dock presentation:
 
 ## Known Limitations
 
-- **No Background Blur**: This widget intentionally does not implement background blur out of the box. Custom background blur within Plasma widgets typically depends on external C++ helper plugins, compositor shaders, or third-party tools that complicate installation. Omitting background blur by design keeps this dock lightweight, self-contained, and easy to install on any standard KDE Plasma 6 system without extra dependencies. Another version featuring full background blur and glassmorphism is planned and will be built soon.
+- **No Background Blur**: This branch is a lightweight, pure QML/JS version that intentionally does not implement background blur to avoid C++ build dependencies, compilers, and complex installation steps. If you want native KWin background blur and Liquid Glass styling with interactive tuning controls, check out the [main / master branch](https://github.com/Matt-Anis/plasma-macos-dock) which includes the native C++ blur module.
 
 ---
 
