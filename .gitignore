@@ -2,5 +2,7 @@ GEMINI.md
 
 # Build outputs
 build/
+CMakeFiles/
+CMakeCache.txt
 CMakeLists.txt.user
 *.kdev4

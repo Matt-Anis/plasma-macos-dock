@@ -36,9 +36,29 @@ KCMUtils.SimpleKCM {
 
     property alias cfg_containerBackgroundType: containerBackgroundTypeComboBox.currentIndex
     property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    property real cfg_blurOpacity: Plasmoid.configuration.blurOpacity !== undefined ? Plasmoid.configuration.blurOpacity : 0.35
+    property real cfg_blurSaturation: Plasmoid.configuration.blurSaturation !== undefined ? Plasmoid.configuration.blurSaturation : 1.3
+    property real cfg_blurContrast: Plasmoid.configuration.blurContrast !== undefined ? Plasmoid.configuration.blurContrast : 1.0
+    property real cfg_blurBrightness: Plasmoid.configuration.blurBrightness !== undefined ? Plasmoid.configuration.blurBrightness : 1.0
     property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
     property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
     property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
+
+    onCfg_zoomMultiplierChanged: {
+        zoomMultiplierSpinBox.value = Math.round(cfg_zoomMultiplier * 10);
+    }
+    onCfg_blurOpacityChanged: {
+        blurOpacitySpinBox.value = Math.round(cfg_blurOpacity * 100);
+    }
+    onCfg_blurSaturationChanged: {
+        blurSaturationSpinBox.value = Math.round(cfg_blurSaturation * 10);
+    }
+    onCfg_blurContrastChanged: {
+        blurContrastSpinBox.value = Math.round(cfg_blurContrast * 10);
+    }
+    onCfg_blurBrightnessChanged: {
+        blurBrightnessSpinBox.value = Math.round(cfg_blurBrightness * 10);
+    }
 
     property alias cfg_showToolTips: showToolTips.checked
     property alias cfg_highlightWindows: highlightWindows.checked
@@ -199,13 +219,15 @@ KCMUtils.SimpleKCM {
             Kirigami.FormData.label: i18nc("@label:combobox", "Container background:")
             model: [
                 i18nc("@option:combobox", "Solid"),
-                i18nc("@option:combobox", "Transparent")
+                i18nc("@option:combobox", "Transparent"),
+                i18nc("@option:combobox", "System Blur"),
+                i18nc("@option:combobox", "Liquid Glass")
             ]
             currentIndex: Plasmoid.configuration.containerBackgroundType !== undefined ? Plasmoid.configuration.containerBackgroundType : 0
         }
 
         RowLayout {
-            visible: containerBackgroundTypeComboBox.currentIndex === 0
+            visible: containerBackgroundTypeComboBox.currentIndex === 0 || containerBackgroundTypeComboBox.currentIndex === 2
             Kirigami.FormData.label: i18nc("@label", "Background color:")
             spacing: Kirigami.Units.smallSpacing
 
@@ -230,6 +252,82 @@ KCMUtils.SimpleKCM {
                 onAccepted: {
                     root.cfg_containerBackgroundColor = selectedColor;
                 }
+            }
+        }
+
+        QQC2.SpinBox {
+            id: blurOpacitySpinBox
+            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Capsule opacity:")
+            from: 5
+            to: 95
+            stepSize: 5
+            value: Math.round((Plasmoid.configuration.blurOpacity !== undefined ? Plasmoid.configuration.blurOpacity : 0.35) * 100)
+            textFromValue: function(value, locale) {
+                return value + "%";
+            }
+            valueFromText: function(text, locale) {
+                return parseInt(text.replace("%", ""), 10) || 0;
+            }
+            onValueChanged: {
+                root.cfg_blurOpacity = value / 100.0;
+            }
+        }
+
+        QQC2.SpinBox {
+            id: blurSaturationSpinBox
+            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Vibrancy (saturation):")
+            from: 0
+            to: 20
+            stepSize: 1
+            value: Math.round((Plasmoid.configuration.blurSaturation !== undefined ? Plasmoid.configuration.blurSaturation : 1.3) * 10)
+            textFromValue: function(value, locale) {
+                return (value / 10.0).toFixed(1) + "x";
+            }
+            valueFromText: function(text, locale) {
+                return Math.round(parseFloat(text) * 10) || 0;
+            }
+            onValueChanged: {
+                root.cfg_blurSaturation = value / 10.0;
+            }
+        }
+
+        QQC2.SpinBox {
+            id: blurContrastSpinBox
+            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Blur contrast:")
+            from: 5
+            to: 15
+            stepSize: 1
+            value: Math.round((Plasmoid.configuration.blurContrast !== undefined ? Plasmoid.configuration.blurContrast : 1.0) * 10)
+            textFromValue: function(value, locale) {
+                return (value / 10.0).toFixed(1) + "x";
+            }
+            valueFromText: function(text, locale) {
+                return Math.round(parseFloat(text) * 10) || 0;
+            }
+            onValueChanged: {
+                root.cfg_blurContrast = value / 10.0;
+            }
+        }
+
+        QQC2.SpinBox {
+            id: blurBrightnessSpinBox
+            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            Kirigami.FormData.label: i18nc("@label:spinbox", "Blur brightness:")
+            from: 5
+            to: 15
+            stepSize: 1
+            value: Math.round((Plasmoid.configuration.blurBrightness !== undefined ? Plasmoid.configuration.blurBrightness : 1.0) * 10)
+            textFromValue: function(value, locale) {
+                return (value / 10.0).toFixed(1) + "x";
+            }
+            valueFromText: function(text, locale) {
+                return Math.round(parseFloat(text) * 10) || 0;
+            }
+            onValueChanged: {
+                root.cfg_blurBrightness = value / 10.0;
             }
         }
 

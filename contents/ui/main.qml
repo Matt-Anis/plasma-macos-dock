@@ -108,6 +108,18 @@ PlasmoidItem {
         ? Plasmoid.configuration.containerBorderWidth
         : 1
     readonly property color containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    readonly property real blurOpacity: (Plasmoid.configuration.blurOpacity !== undefined && Plasmoid.configuration.blurOpacity > 0)
+        ? Plasmoid.configuration.blurOpacity
+        : 0.35
+    readonly property real blurSaturation: (Plasmoid.configuration.blurSaturation !== undefined)
+        ? Plasmoid.configuration.blurSaturation
+        : 1.3
+    readonly property real blurContrast: (Plasmoid.configuration.blurContrast !== undefined)
+        ? Plasmoid.configuration.blurContrast
+        : 1.0
+    readonly property real blurBrightness: (Plasmoid.configuration.blurBrightness !== undefined)
+        ? Plasmoid.configuration.blurBrightness
+        : 1.0
     readonly property bool zoomEnabled: Plasmoid.configuration.zoomEnabled !== undefined
         ? Plasmoid.configuration.zoomEnabled
         : true
@@ -696,14 +708,20 @@ PlasmoidItem {
                 rightMargin: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.RightEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
-            // macOS dock capsule background
-            Rectangle {
+            // macOS dock capsule background (Solid, Transparent, System Blur, or Liquid Glass)
+            LiquidGlassBackground {
                 id: dockBackground
                 anchors.fill: parent
                 radius: Math.min(width, height) / 3
-                color: tasks.containerBackgroundType === 1 ? "transparent" : tasks.containerBackgroundColor
-                border.color: tasks.containerBorderWidth > 0 ? tasks.containerBorderColor : "transparent"
-                border.width: tasks.containerBorderWidth
+                backgroundType: tasks.containerBackgroundType
+                customBackgroundColor: tasks.containerBackgroundColor
+                customBorderWidth: tasks.containerBorderWidth
+                customBorderColor: tasks.containerBorderColor
+                blurOpacity: tasks.blurOpacity
+                blurSaturation: tasks.blurSaturation
+                blurContrast: tasks.blurContrast
+                blurBrightness: tasks.blurBrightness
+                isVertical: tasks.vertical
                 z: -1
             }
 
