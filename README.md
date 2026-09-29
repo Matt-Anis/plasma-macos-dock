@@ -68,11 +68,7 @@ Unlike standard taskbars where icon size is constrained by panel height, this do
 - **How to use**: Open dock settings under **Appearance > Icons & Dimensions**. Use the **Icon size (px)** spinbox to set your base icon size (from 24px up to 256px), and adjust **Icon spacing (px)** to control the gap between neighboring icons.
 - **Visual preview**:
 
-<!-- PLACEHOLDER: GIF showing adjustable icon sizing and spacing -->
-
-```markdown
-![Icon Sizing and Spacing](placeholders/icon-sizing-spacing.gif)
-```
+  ![Icon Sizing and Spacing](assets/demo/size-and-spacing.gif)
 
 ### Capsule Padding and Edge Elevation
 
