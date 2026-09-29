@@ -77,11 +77,7 @@ The dock sits inside a floating capsule with customizable inner padding and an e
 - **How to use**: In dock settings under **Appearance > Icons & Dimensions**, configure **Horizontal padding (px)** and **Vertical padding (px)** to control inner capsule margins around icons. Adjust **Elevation offset (px)** to raise the dock above the screen edge.
 - **Visual preview**:
 
-<!-- PLACEHOLDER: GIF showing capsule padding and elevation offset -->
-
-```markdown
-![Capsule Padding and Elevation](placeholders/padding-elevation.gif)
-```
+  ![Capsule Padding and Elevation](assets/demo/elevation-padding.gif)
 
 ### Interactive Magnification Wave
 
@@ -90,11 +86,7 @@ Hovering over dock icons triggers a smooth, continuous magnification wave where 
 - **How to use**: In dock settings under **Appearance > Magnification & Animation**, turn on **Magnify icons on hover**. Use the **Zoom scale** spinbox to choose the peak magnification factor (from 1.0x up to 2.0x), and set the **Blast radius (icons)** to specify how many neighboring icons scale alongside the hovered icon (1 to 4 items on each side).
 - **Visual preview**:
 
-<!-- PLACEHOLDER: GIF showing magnification wave with custom scale and blast radius -->
-
-```markdown
-![Magnification Wave](placeholders/magnification-wave.gif)
-```
+  ![Interactive Magnification Wave](assets/demo/zoom.gif)
 
 ### Spring and Smooth Animation Physics
 
@@ -103,26 +95,12 @@ You can choose between physical spring simulation or cubic easing curves for ico
 - **How to use**: In dock settings under **Appearance > Magnification & Animation**, select your preference in the **Animation physics** dropdown:
   - **Spring physics**: Employs elastic simulation with subtle damping for a bouncy, tactile feel.
   - **Smooth**: Uses a clean cubic ease-out curve for steady, linear transitions.
-- **Visual preview**:
-
-<!-- PLACEHOLDER: GIF comparing Spring physics vs Smooth animation -->
-
-```markdown
-![Animation Physics](placeholders/animation-physics.gif)
-```
 
 ### Hover Lift Elevation
 
 When icons magnify on hover, they can simultaneously lift upward away from the panel base toward the cursor.
 
 - **How to use**: Under **Appearance > Magnification & Animation**, adjust the **Hover lift (px)** spinbox (from 0px up to 32px). Higher values make icons elevate toward the mouse cursor as they scale up.
-- **Visual preview**:
-
-<!-- PLACEHOLDER: GIF showing hover lift elevation effect -->
-
-```markdown
-![Hover Lift Elevation](placeholders/hover-lift.gif)
-```
 
 ### Capsule Styling and Custom Colors
 
@@ -134,37 +112,19 @@ The dock background capsule can be styled as a solid frosted pill, a transparent
   - Configure **Border thickness (px)** and use **Choose Color...** next to **Border color** to customize the capsule stroke outline.
 - **Visual preview**:
 
-<!-- PLACEHOLDER: GIF showing custom background colors and border styling -->
-
-```markdown
-![Capsule Styling](placeholders/capsule-styling.gif)
-```
+  ![Capsule Styling](assets/demo/styling.gif)
 
 ### External Running Indicator Dots
 
 Running applications display a subtle indicator dot placed in the capsule padding beneath the icon rather than drawn over the icon graphic itself.
 
 - **How to use**: In dock settings under **Appearance > Previews & Indicators**, check **Show indicator for running applications**. The indicator glows bright white for the active window and dims to soft translucent white for background or minimized windows.
-- **Visual preview**:
-
-<!-- PLACEHOLDER: GIF showing running indicator dots in active and background states -->
-
-```markdown
-![Running Indicators](placeholders/running-indicators.gif)
-```
 
 ### Pinned and Running Tasks Divider
 
 The dock automatically generates a subtle vertical or horizontal separator line between your pinned application launchers and unpinned running windows.
 
 - **How to use**: Pin favorite applications to your dock. When you open an unpinned app, a clean translucent divider appears automatically between the launcher section and the open window section.
-- **Visual preview**:
-
-<!-- PLACEHOLDER: GIF showing dynamic separator between pinned and running windows -->
-
-```markdown
-![Tasks Divider](placeholders/tasks-divider.gif)
-```
 
 ### All-Edge Screen Placement Support
 
@@ -173,11 +133,7 @@ The dock works on any screen edge, automatically adjusting its orientation, lift
 - **How to use**: Place your Plasma panel on the Bottom, Top, Left, or Right edge of your display. The dock detects the screen edge automatically, rotating the capsule layout, directing icon hover lift inward toward the desktop, and adjusting indicator dot positions.
 - **Visual preview**:
 
-<!-- PLACEHOLDER: GIF showing dock operating on Bottom, Top, Left, and Right screen edges -->
-
-```markdown
-![All Edge Placement](placeholders/all-edge-placement.gif)
-```
+  ![All Edge Placement](assets/demo/positions.gif)
 
 ---
 
