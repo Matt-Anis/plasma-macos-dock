@@ -28,7 +28,7 @@ PlasmaCore.ToolTipArea {
     // To achieve a bottom-to-top layout on vertical panels, the task manager
     // is rotated by 180 degrees(see main.qml). This makes the tasks rotated,
     // so un-rotate them here to fix that.
-    rotation: Plasmoid.configuration.reverseMode && Plasmoid.formFactor === PlasmaCore.Types.Vertical ? 180 : 0
+    rotation: Plasmoid.configuration.reverseMode && (tasksRoot ? tasksRoot.vertical : false) ? 180 : 0
 
     readonly property real targetZoomFactor: (!inPopup && tasksRoot) ? tasksRoot.magnificationFactorForIndex(index) : 0.0
 
@@ -177,7 +177,7 @@ PlasmaCore.ToolTipArea {
 
     active: !inPopup && !tasksRoot.groupDialog && task.contextMenu?.status !== PlasmaExtras.Menu.Open
     interactive: model.IsWindow || mainItem.playerData
-    location: Plasmoid.location
+    location: tasksRoot ? tasksRoot.effectiveLocation : Plasmoid.location
     mainItem: !Plasmoid.configuration.showToolTips || !model.IsWindow ? pinnedAppToolTipDelegate : openWindowToolTipDelegate
 
     onXChanged: {
@@ -553,18 +553,18 @@ PlasmaCore.ToolTipArea {
         id: hoverHitBox
 
         anchors {
-            left: !tasksRoot.vertical ? parent.left : (Plasmoid.location === PlasmaCore.Types.LeftEdge ? parent.left : undefined)
-            right: !tasksRoot.vertical ? parent.right : (Plasmoid.location !== PlasmaCore.Types.LeftEdge ? parent.right : undefined)
-            top: tasksRoot.vertical ? parent.top : (Plasmoid.location === PlasmaCore.Types.TopEdge ? parent.top : undefined)
-            bottom: tasksRoot.vertical ? parent.bottom : (Plasmoid.location !== PlasmaCore.Types.TopEdge ? parent.bottom : undefined)
+            left: !tasksRoot.vertical ? parent.left : (tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge ? parent.left : undefined)
+            right: !tasksRoot.vertical ? parent.right : (tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge ? parent.right : undefined)
+            top: tasksRoot.vertical ? parent.top : (tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? parent.top : undefined)
+            bottom: tasksRoot.vertical ? parent.bottom : (tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge ? parent.bottom : undefined)
 
-            topMargin: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge)
+            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge)
                 ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
-            bottomMargin: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge)
+            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge)
                 ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
-            leftMargin: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge)
+            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge)
                 ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
-            rightMargin: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge)
+            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge)
                 ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
         }
 
@@ -773,10 +773,10 @@ PlasmaCore.ToolTipArea {
 
                 AnchorChanges {
                     target: iconBox
-                    anchors.left: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
-                    anchors.right: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.right : undefined
-                    anchors.top: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
-                    anchors.bottom: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+                    anchors.left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+                    anchors.right: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
+                    anchors.top: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+                    anchors.bottom: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
                     anchors.horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
                     anchors.verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
                 }
@@ -798,8 +798,8 @@ PlasmaCore.ToolTipArea {
             },
             Translate {
                 id: hoverTranslate
-                x: tasksRoot.vertical ? (Plasmoid.location === PlasmaCore.Types.LeftEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
-                y: !tasksRoot.vertical ? (Plasmoid.location === PlasmaCore.Types.TopEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
+                x: tasksRoot.vertical ? (tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
+                y: !tasksRoot.vertical ? (tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
             }
         ]
     }
@@ -822,17 +822,17 @@ PlasmaCore.ToolTipArea {
 
     readonly property real bounceOffset: {
         if (!tasksRoot.vertical) {
-            return Plasmoid.location === PlasmaCore.Types.TopEdge ? bounceJumpHeight : -bounceJumpHeight;
+            return tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? bounceJumpHeight : -bounceJumpHeight;
         } else {
-            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? bounceJumpHeight : -bounceJumpHeight;
+            return tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge ? bounceJumpHeight : -bounceJumpHeight;
         }
     }
 
     readonly property real bounceReboundOffset: {
         if (!tasksRoot.vertical) {
-            return Plasmoid.location === PlasmaCore.Types.TopEdge ? bounceReboundHeight : -bounceReboundHeight;
+            return tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? bounceReboundHeight : -bounceReboundHeight;
         } else {
-            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? bounceReboundHeight : -bounceReboundHeight;
+            return tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge ? bounceReboundHeight : -bounceReboundHeight;
         }
     }
 
@@ -902,17 +902,17 @@ PlasmaCore.ToolTipArea {
             horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
             verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
 
-            bottom: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
-            bottomMargin: (!tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? 2 : 0
+            bottom: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? 2 : 0
 
-            top: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
-            topMargin: (!tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? 2 : 0
+            top: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? 2 : 0
 
-            left: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.left : undefined
-            leftMargin: (tasksRoot.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? 2 : 0
+            left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? 2 : 0
 
-            right: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.right : undefined
-            rightMargin: (tasksRoot.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? 2 : 0
+            right: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
+            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? 2 : 0
         }
     }
 

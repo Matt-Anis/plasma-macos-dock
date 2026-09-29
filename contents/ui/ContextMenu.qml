@@ -28,11 +28,12 @@ PlasmaExtras.Menu {
     property bool showAllPlaces: false
 
     placement: {
-        if (Plasmoid.location === PlasmaCore.Types.LeftEdge) {
+        const loc = (visualParent && visualParent.tasksRoot) ? visualParent.tasksRoot.effectiveLocation : Plasmoid.location;
+        if (loc === PlasmaCore.Types.LeftEdge) {
             return PlasmaExtras.Menu.RightPosedTopAlignedPopup;
-        } else if (Plasmoid.location === PlasmaCore.Types.TopEdge) {
+        } else if (loc === PlasmaCore.Types.TopEdge) {
             return PlasmaExtras.Menu.BottomPosedLeftAlignedPopup;
-        } else if (Plasmoid.location === PlasmaCore.Types.RightEdge) {
+        } else if (loc === PlasmaCore.Types.RightEdge) {
             return PlasmaExtras.Menu.LeftPosedTopAlignedPopup;
         } else {
             return PlasmaExtras.Menu.TopPosedLeftAlignedPopup;

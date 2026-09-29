@@ -21,7 +21,7 @@ GridLayout {
     required property int count
     property int iconSpacing: 4
 
-    readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
+    property bool vertical: false
 
     rows: vertical ? count : 1
     columns: vertical ? 1 : count

@@ -25,14 +25,53 @@ import org.kde.plasma.workspace.dbus as DBus
 PlasmoidItem {
     id: tasks
 
+    readonly property bool vertical: {
+        if (Plasmoid.location === PlasmaCore.Types.LeftEdge || Plasmoid.location === PlasmaCore.Types.RightEdge) {
+            return true;
+        }
+        if (Plasmoid.location === PlasmaCore.Types.TopEdge || Plasmoid.location === PlasmaCore.Types.BottomEdge) {
+            return false;
+        }
+        if (Plasmoid.formFactor === PlasmaCore.Types.Vertical) {
+            return true;
+        }
+        if (Plasmoid.formFactor === PlasmaCore.Types.Horizontal) {
+            return false;
+        }
+        if (parent && parent.height > 0 && parent.width > 0) {
+            return parent.height > parent.width;
+        }
+        return false;
+    }
+
+    readonly property int effectiveLocation: {
+        if (Plasmoid.location === PlasmaCore.Types.LeftEdge || Plasmoid.location === PlasmaCore.Types.RightEdge
+            || Plasmoid.location === PlasmaCore.Types.TopEdge || Plasmoid.location === PlasmaCore.Types.BottomEdge) {
+            return Plasmoid.location;
+        }
+        if (vertical) {
+            if (tasks.window && tasks.window.screen) {
+                const panelCenterX = tasks.window.x + tasks.window.width / 2;
+                const screenCenterX = (tasks.window.screen.virtualX || 0) + tasks.window.screen.width / 2;
+                return panelCenterX < screenCenterX ? PlasmaCore.Types.LeftEdge : PlasmaCore.Types.RightEdge;
+            }
+            return PlasmaCore.Types.LeftEdge;
+        }
+        if (tasks.window && tasks.window.screen) {
+            const panelCenterY = tasks.window.y + tasks.window.height / 2;
+            const screenCenterY = (tasks.window.screen.virtualY || 0) + tasks.window.screen.height / 2;
+            return panelCenterY < screenCenterY ? PlasmaCore.Types.TopEdge : PlasmaCore.Types.BottomEdge;
+        }
+        return PlasmaCore.Types.BottomEdge;
+    }
+
     // For making a bottom to top layout since qml flow can't do that.
     // We just hang the task manager upside down to achieve that.
     // This mirrors the tasks and group dialog as well, so we un-rotate them
     // to fix that (see Task.qml and GroupDialog.qml).
-    rotation: Plasmoid.configuration.reverseMode && Plasmoid.formFactor === PlasmaCore.Types.Vertical ? 180 : 0
+    rotation: Plasmoid.configuration.reverseMode && vertical ? 180 : 0
 
     readonly property bool shouldShrinkToZero: tasksModel.count === 0
-    readonly property bool vertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool iconsOnly: true
 
     property Task toolTipOpenedByClick
@@ -164,9 +203,9 @@ PlasmoidItem {
 
     Layout.alignment: {
         if (!vertical) {
-            return Plasmoid.location === PlasmaCore.Types.TopEdge ? Qt.AlignTop : Qt.AlignBottom;
+            return effectiveLocation === PlasmaCore.Types.TopEdge ? Qt.AlignTop : Qt.AlignBottom;
         } else {
-            return Plasmoid.location === PlasmaCore.Types.LeftEdge ? Qt.AlignLeft : Qt.AlignRight;
+            return effectiveLocation === PlasmaCore.Types.LeftEdge ? Qt.AlignLeft : Qt.AlignRight;
         }
     }
 
@@ -611,7 +650,7 @@ PlasmoidItem {
             blockFirstEnter: false
 
             edge: {
-                switch (Plasmoid.location) {
+                switch (tasks.effectiveLocation) {
                 case PlasmaCore.Types.BottomEdge:
                     return Qt.TopEdge;
                 case PlasmaCore.Types.TopEdge:
@@ -633,14 +672,14 @@ PlasmoidItem {
             anchors {
                 horizontalCenter: tasks.vertical ? undefined : parent.horizontalCenter
                 verticalCenter: tasks.vertical ? parent.verticalCenter : undefined
-                bottom: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
-                bottomMargin: (!tasks.vertical && Plasmoid.location !== PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelBottomInset) : 0
-                top: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? parent.top : undefined
-                topMargin: (!tasks.vertical && Plasmoid.location === PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelTopInset) : 0
-                left: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
-                leftMargin: (tasks.vertical && Plasmoid.location === PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelLeftInset) : 0
-                right: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? parent.right : undefined
-                rightMargin: (tasks.vertical && Plasmoid.location !== PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
+                bottom: (!tasks.vertical && tasks.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+                bottomMargin: (!tasks.vertical && tasks.effectiveLocation !== PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelBottomInset) : 0
+                top: (!tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+                topMargin: (!tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.TopEdge) ? (tasks.elevation - tasks.panelTopInset) : 0
+                left: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+                leftMargin: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.LeftEdge) ? (tasks.elevation - tasks.panelLeftInset) : 0
+                right: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
+                rightMargin: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.RightEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
             // macOS dock capsule background
@@ -657,6 +696,7 @@ PlasmoidItem {
             TaskList {
                 id: taskList
 
+                vertical: tasks.vertical
                 LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
                 anchors.centerIn: parent
 

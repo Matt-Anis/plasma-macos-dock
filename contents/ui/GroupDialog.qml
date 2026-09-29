@@ -34,15 +34,18 @@ PlasmaCore.PopupPlasmaWindow {
     }
 
 
-    popupDirection: switch (Plasmoid.location) {
+    popupDirection: {
+        const loc = (visualParent && visualParent.tasksRoot) ? visualParent.tasksRoot.effectiveLocation : Plasmoid.location;
+        switch (loc) {
         case PlasmaCore.Types.TopEdge:
-            return Qt.BottomEdge
+            return Qt.BottomEdge;
         case PlasmaCore.Types.LeftEdge:
-            return Qt.RightEdge
+            return Qt.RightEdge;
         case PlasmaCore.Types.RightEdge:
-            return Qt.LeftEdge
+            return Qt.LeftEdge;
         default:
-            return Qt.TopEdge
+            return Qt.TopEdge;
+        }
     }
 
     readonly property real preferredWidth: Screen.width / 3
