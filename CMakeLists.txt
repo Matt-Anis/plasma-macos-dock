@@ -56,3 +56,9 @@ install(DIRECTORY contents
 install(FILES metadata.json
     DESTINATION ${KDE_INSTALL_DATADIR}/plasma/plasmoids/com.github.mattanis.macosdock
 )
+
+# Install icon for widget explorer and system integration
+install(FILES assets/logo.png
+    DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/256x256/apps
+    RENAME com.github.mattanis.macosdock.png
+)

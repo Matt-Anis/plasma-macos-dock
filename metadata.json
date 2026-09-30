@@ -9,7 +9,7 @@
         "Category": "Windows and Tasks",
         "Description": "macOS-style dock and task manager",
         "EnabledByDefault": true,
-        "Icon": "preferences-system-windows",
+        "Icon": "com.github.mattanis.macosdock",
         "Id": "com.github.mattanis.macosdock",
         "License": "GPL-2.0+",
         "Name": "macOS Dock",
