@@ -598,6 +598,7 @@ PlasmaCore.ToolTipArea {
     TapHandler {
         acceptedButtons: Qt.RightButton
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        enabled: task.inPopup
         gesturePolicy: TapHandler.WithinBounds // Release grab when menu appears
         onPressedChanged: if (pressed) contextMenuTimer.start()
     }
@@ -611,6 +612,7 @@ PlasmaCore.ToolTipArea {
     TapHandler {
         id: leftTapHandler
         acceptedButtons: Qt.LeftButton
+        enabled: task.inPopup
         onTapped: (eventPoint, button) => leftClick()
 
         function leftClick(): void {
