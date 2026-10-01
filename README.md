@@ -14,6 +14,7 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 - [Features](#features)
   - [Custom Icon Sizing and Spacing](#custom-icon-sizing-and-spacing)
   - [Capsule Padding and Edge Elevation](#capsule-padding-and-edge-elevation)
+  - [Auto-Shrinking and Progressive Magnification](#auto-shrinking-and-progressive-magnification)
   - [Interactive Magnification Wave](#interactive-magnification-wave)
   - [Spring and Smooth Animation Physics](#spring-and-smooth-animation-physics)
   - [Hover Lift Elevation](#hover-lift-elevation)
@@ -123,6 +124,15 @@ The dock sits inside a floating capsule with customizable inner padding and an e
 - **Visual preview**:
 
   ![Capsule Padding and Elevation](assets/demo/elevation-padding.gif)
+
+### Auto-Shrinking and Progressive Magnification
+
+When many applications are opened or pinned, the dock prevents screen overflow by dynamically scaling down icons and spacing in real time to fit comfortably within monitor bounds (with a minimum 16px floor). As icons compress, the magnification multiplier automatically scales up progressively ($(\text{preferredSize} / \text{currentSize})^{0.75}$), ensuring that even miniature icons on an ultra-dense dock blow up to an easily recognizable, readable size on hover.
+
+- **How to use**: This behavior is automatic. As you launch or pin more tasks exceeding your monitor width or height, the dock smoothly compresses icons to fit, expanding them back to your preferred size as windows close.
+- **Visual preview**:
+
+  ![Auto-Shrinking and Progressive Magnification](assets/demo/auto-shrink.gif)
 
 ### Interactive Magnification Wave
 
