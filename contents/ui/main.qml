@@ -84,8 +84,8 @@ PlasmoidItem {
 
     preferredRepresentation: fullRepresentation
 
-    readonly property int iconSize: Plasmoid.configuration.iconSize || 48
-    readonly property int iconSpacing: (Plasmoid.configuration.iconSpacing !== undefined && Plasmoid.configuration.iconSpacing >= 0)
+    readonly property int preferredIconSize: Plasmoid.configuration.iconSize || 48
+    readonly property int configuredIconSpacing: (Plasmoid.configuration.iconSpacing !== undefined && Plasmoid.configuration.iconSpacing >= 0)
         ? Plasmoid.configuration.iconSpacing
         : 4
     readonly property int horizontalPadding: Plasmoid.configuration.horizontalPadding !== undefined
@@ -123,7 +123,7 @@ PlasmoidItem {
     readonly property bool zoomEnabled: Plasmoid.configuration.zoomEnabled !== undefined
         ? Plasmoid.configuration.zoomEnabled
         : true
-    readonly property real zoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined
+    readonly property real configuredZoomMultiplier: Plasmoid.configuration.zoomMultiplier !== undefined
         ? Plasmoid.configuration.zoomMultiplier
         : 1.5
     readonly property int zoomBlastRadius: Plasmoid.configuration.zoomBlastRadius !== undefined
@@ -188,35 +188,101 @@ PlasmoidItem {
 
     readonly property bool hasDivider: firstUnpinnedIndex > 0
 
+    readonly property real screenAvailableLength: {
+        let fullLength = 0;
+        if (tasks.window && tasks.window.screen) {
+            fullLength = vertical ? tasks.window.screen.height : tasks.window.screen.width;
+        } else if (Plasmoid.containment && Plasmoid.containment.screenGeometry) {
+            fullLength = vertical ? Plasmoid.containment.screenGeometry.height : Plasmoid.containment.screenGeometry.width;
+        }
+        if (fullLength <= 0) {
+            fullLength = vertical ? (parent ? parent.height : 1080) : (parent ? parent.width : 1920);
+        }
+        // Reserve a 48px safety margin so the dock never touches the screen corners
+        return Math.max(300, fullLength - 48);
+    }
+
+    readonly property real zoomFactorSum: {
+        let sum = 1.0;
+        for (let d = 1; d <= zoomBlastRadius; ++d) {
+            const u = d / (zoomBlastRadius + 1);
+            const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
+            sum += 2.0 * (cosVal * cosVal);
+        }
+        return sum;
+    }
+
+    readonly property real configuredZoomSpanFactor: zoomEnabled
+        ? ((configuredZoomMultiplier - 1.0) * 0.7 * zoomFactorSum)
+        : 0.0
+
+    readonly property real fixedOverhead: {
+        const pad = vertical ? (verticalPadding * 2) : (horizontalPadding * 2);
+        const div = hasDivider ? dividerSpan : 0;
+        const sp = tasksCount > 0 ? (Math.max(0, tasksCount - 1) * configuredIconSpacing) : 0;
+        const extraConst = zoomEnabled ? 24 : 0;
+        return pad + div + sp + extraConst;
+    }
+
+    readonly property int effectiveIconSize: {
+        if (tasksCount <= 0) {
+            return preferredIconSize;
+        }
+        const availableForIcons = screenAvailableLength - fixedOverhead;
+        const divisor = tasksCount + (zoomEnabled ? configuredZoomSpanFactor : 0);
+        if (divisor <= 0) {
+            return preferredIconSize;
+        }
+        const maxFittingSize = Math.floor(availableForIcons / divisor);
+        return Math.max(16, Math.min(preferredIconSize, maxFittingSize));
+    }
+
+    readonly property int iconSize: effectiveIconSize
+
+    readonly property real zoomMultiplier: {
+        if (!zoomEnabled) {
+            return 1.0;
+        }
+        if (iconSize >= preferredIconSize || preferredIconSize <= 16) {
+            return configuredZoomMultiplier;
+        }
+        const shrinkRatio = preferredIconSize / Math.max(1, iconSize);
+        return configuredZoomMultiplier * Math.pow(shrinkRatio, 0.75);
+    }
+
+    readonly property real zoomSpanFactor: zoomEnabled
+        ? ((zoomMultiplier - 1.0) * 0.7 * zoomFactorSum)
+        : 0.0
+
+    readonly property int effectiveIconSpacing: (iconSize < 28)
+        ? Math.max(1, Math.min(configuredIconSpacing, Math.round(iconSize / 8)))
+        : configuredIconSpacing
+
+    readonly property int iconSpacing: effectiveIconSpacing
+
     readonly property int tasksCount: tasksModel.count
     readonly property real tasksLength: tasksCount > 0
-        ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * iconSpacing + (hasDivider ? dividerSpan : 0))
+        ? (tasksCount * iconSize + Math.max(0, tasksCount - 1) * effectiveIconSpacing + (hasDivider ? dividerSpan : 0))
         : 0
 
     readonly property real maxExtraSpan: {
         if (!zoomEnabled) {
             return 0;
         }
-        let factorSum = 1.0;
-        for (let d = 1; d <= zoomBlastRadius; ++d) {
-            const u = d / (zoomBlastRadius + 1);
-            const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
-            factorSum += 2.0 * (cosVal * cosVal);
-        }
-        return Math.ceil(iconSize * (zoomMultiplier - 1.0) * 0.7 * factorSum) + 24;
+        return Math.ceil(iconSize * zoomSpanFactor) + 24;
     }
 
     readonly property real dockWidth: {
         if (shouldShrinkToZero) {
             return Kirigami.Units.gridUnit;
         }
-        return vertical ? targetThickness : (tasksLength + horizontalPadding * 2 + maxExtraSpan);
+        return vertical ? targetThickness : Math.min(screenAvailableLength, tasksLength + horizontalPadding * 2 + maxExtraSpan);
     }
     readonly property real dockHeight: {
         if (shouldShrinkToZero) {
             return Kirigami.Units.gridUnit;
         }
-        return vertical ? (tasksLength + verticalPadding * 2 + maxExtraSpan) : targetThickness;
+        return vertical ? Math.min(screenAvailableLength, tasksLength + verticalPadding * 2 + maxExtraSpan) : targetThickness;
     }
 
     width: (vertical && parent) ? parent.width : dockWidth
