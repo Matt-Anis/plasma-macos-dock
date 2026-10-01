@@ -38,7 +38,34 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 ## Installation
 
-### Installation from Source (With Blur Support)
+### Option 1: 1-Line Automated Installer (Recommended for Full Blur)
+
+Run the universal installer script. It automatically detects your distribution (Fedora, Arch, Ubuntu/Debian, openSUSE), installs required build dependencies, compiles the C++ KWin blur plugin, and sets up the widget and icons:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Matt-Anis/plasma-macos-dock/master/install.sh | bash
+```
+
+Or if you've already cloned the repository:
+
+```bash
+./install.sh
+```
+
+---
+
+### Option 2: Install from KDE Store (No Compilation)
+
+1. Right-click your desktop or panel and choose **Add Widgets...**
+2. Click **Get New Widgets...** (or visit [store.kde.org](https://store.kde.org))
+3. Search for **macOS Dock** and click **Install**.
+
+> [!NOTE]
+> Installing directly from the KDE Store runs the widget in pure QML mode. For hardware-accelerated KWin background blur and liquid glass effects, run the 1-line installer above to compile the optional blur module.
+
+---
+
+### Option 3: Manual Installation from Source
 
 1. Clone this repository:
 
@@ -62,6 +89,18 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
    ```
 
 4. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
+
+---
+
+### Packaging for Release (Developers)
+
+To create a clean `.plasmoid` bundle ready to upload to [store.kde.org](https://store.kde.org):
+
+```bash
+./package.sh
+```
+
+This generates `com.github.mattanis.macosdock.plasmoid` in the project root.
 
 > [!TIP]
 > **Prefer a lightweight version without C++ build dependencies?**  

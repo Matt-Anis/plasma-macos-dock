@@ -2,7 +2,11 @@ GEMINI.md
 
 # Build outputs
 build/
+*.plasmoid
 CMakeFiles/
 CMakeCache.txt
 CMakeLists.txt.user
 *.kdev4
+__pycache__/
+spawn_test_windows.py
+motion/
