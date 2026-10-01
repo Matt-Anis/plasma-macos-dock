@@ -65,7 +65,7 @@ install_dependencies() {
     if [ "$NEED_DEPS" -eq 1 ] || [ "${1:-}" = "--deps" ]; then
         info "Installing build dependencies..."
         if [[ "$DISTRO_ID" =~ ^(fedora|rhel|centos)$ ]] || [[ "$DISTRO_LIKE" =~ fedora ]]; then
-            sudo dnf install -y \
+            sudo dnf install -y --setopt=install_weak_deps=False --allowerasing \
                 cmake \
                 gcc-c++ \
                 extra-cmake-modules \
