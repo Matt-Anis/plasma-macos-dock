@@ -40,17 +40,20 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 ### Option 1: 1-Line Automated Installer (Recommended for Full Blur)
 
-Run the universal installer script. It automatically detects your distribution (Fedora, Arch, Ubuntu/Debian, openSUSE), installs required build dependencies, compiles the C++ KWin blur plugin, and sets up the widget and icons:
+Run the installer script. It detects your distribution (Fedora, Arch, Ubuntu/Debian, openSUSE), compiles the C++ KWin blur plugin, and sets up the widget and icons. Pass `--install-deps` to have it install the required build dependencies for you:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Matt-Anis/plasma-macos-dock/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/Matt-Anis/plasma-macos-dock/master/install.sh | bash -s -- --install-deps
 ```
 
 Or if you've already cloned the repository:
 
 ```bash
-./install.sh
+./install.sh --install-deps
 ```
+
+> [!TIP]
+> If you already have the build dependencies installed, you can omit `--install-deps`. The script will print the install command for your distro if the build fails.
 
 ---
 
@@ -125,8 +128,9 @@ This generates `com.github.mattanis.macosdock.plasmoid` in the project root.
 To compile the native C++ blur module on this branch, ensure your system has development packages installed:
 - `cmake` (>= 3.16) and a C++17 compiler (`gcc-c++` or `clang`)
 - `extra-cmake-modules` (ECM)
-- `kf6-kwindowsystem-devel` (or `libkf6windowsystem-dev`)
-- `qt6-base-devel`, `qt6-declarative-devel`
+- `kf6-kwindowsystem-devel` (or `libkf6windowsystem-dev` on Debian/Ubuntu)
+- `qt6-base-devel`, `qt6-declarative-devel` (or `qt6-base-dev`, `qt6-declarative-dev`)
+- `libplasma-devel` (or `libplasma-dev` on Debian/Ubuntu, `libplasma6-devel` on openSUSE)
 
 ### Required Runtime Packages
 Most standard Plasma 6 desktop installations include these by default, but minimal distributions (e.g., minimal Arch, Gentoo, Fedora Minimal) may require installing them explicitly:
