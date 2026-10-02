@@ -49,16 +49,21 @@ install(FILES qmldir
     DESTINATION ${KDE_INSTALL_QMLDIR}/com/github/mattanis/macosdock/blur
 )
 
-# Install plasmoid applet package directly
-install(DIRECTORY contents
-    DESTINATION ${KDE_INSTALL_DATADIR}/plasma/plasmoids/com.github.mattanis.macosdock
-)
-install(FILES metadata.json
-    DESTINATION ${KDE_INSTALL_DATADIR}/plasma/plasmoids/com.github.mattanis.macosdock
-)
+# Option to only build/install the C++ plugin (useful when the plasmoid is installed from KDE Store)
+option(BUILD_PLUGIN_ONLY "Build and install only the C++ blur plugin without installing plasmoid files" OFF)
 
-# Install icon for widget explorer and system integration
-install(FILES assets/logo.png
-    DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/256x256/apps
-    RENAME com.github.mattanis.macosdock.png
-)
+if(NOT BUILD_PLUGIN_ONLY)
+    # Install plasmoid applet package directly
+    install(DIRECTORY contents
+        DESTINATION ${KDE_INSTALL_DATADIR}/plasma/plasmoids/com.github.mattanis.macosdock
+    )
+    install(FILES metadata.json
+        DESTINATION ${KDE_INSTALL_DATADIR}/plasma/plasmoids/com.github.mattanis.macosdock
+    )
+
+    # Install icon for widget explorer and system integration
+    install(FILES assets/logo.png
+        DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/256x256/apps
+        RENAME com.github.mattanis.macosdock.png
+    )
+endif()

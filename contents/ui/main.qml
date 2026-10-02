@@ -774,7 +774,7 @@ PlasmoidItem {
                 rightMargin: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.RightEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
-            // macOS dock capsule background (Solid, Transparent, System Blur, or Liquid Glass)
+            // macOS dock capsule background (Solid, Transparent, Translucent, System Blur, or Liquid Glass)
             LiquidGlassBackground {
                 id: dockBackground
                 anchors.fill: parent

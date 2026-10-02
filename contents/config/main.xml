@@ -175,10 +175,11 @@
       <default>true</default>
     </entry>
     <entry name="containerBackgroundType" type="Enum">
-      <label>Container background type: 0 = Solid, 1 = Transparent, 2 = SystemBlur, 3 = LiquidGlass</label>
+      <label>Container background type: 0 = Solid, 1 = Transparent, 2 = Translucent, 3 = SystemBlur, 4 = LiquidGlass</label>
       <choices>
         <choice name="Solid"/>
         <choice name="Transparent"/>
+        <choice name="Translucent"/>
         <choice name="SystemBlur"/>
         <choice name="LiquidGlass"/>
       </choices>

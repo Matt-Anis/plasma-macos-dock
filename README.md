@@ -38,76 +38,84 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 ## Installation
 
-### Option 1: 1-Line Automated Installer (Recommended for Full Blur)
+### Option 1: Install from KDE Store (Recommended — No Compilation)
 
-Run the installer script. It detects your distribution (Fedora, Arch, Ubuntu/Debian, openSUSE), compiles the C++ KWin blur plugin, and sets up the widget and icons. Pass `--install-deps` to have it install the required build dependencies for you:
+The easiest way to get macOS Dock is directly through Plasma's built-in widget installer:
 
-```bash
-curl -sSL https://raw.githubusercontent.com/Matt-Anis/plasma-macos-dock/master/install.sh | bash -s -- --install-deps
-```
-
-Or if you've already cloned the repository:
-
-```bash
-./install.sh --install-deps
-```
-
-> [!TIP]
-> If you already have the build dependencies installed, you can omit `--install-deps`. The script will print the install command for your distro if the build fails.
-
----
-
-### Option 2: Install from KDE Store (No Compilation)
-
-1. Right-click your desktop or panel and choose **Add Widgets...**
-2. Click **Get New Widgets...** (or visit [store.kde.org](https://store.kde.org))
+1. Right-click your desktop or an existing panel and choose **Add Widgets…**
+2. Click **Get New Widgets…** $\rightarrow$ **Download New Plasma Widgets…** (or visit [store.kde.org](https://store.kde.org))
 3. Search for **macOS Dock** and click **Install**.
 
+Alternatively, download `com.github.mattanis.macosdock.plasmoid` from the [Releases](https://github.com/Matt-Anis/plasma-macos-dock/releases) page and install it using:
+
+```bash
+kpackagetool6 --type Plasma/Applet --install com.github.mattanis.macosdock.plasmoid
+```
+
 > [!NOTE]
-> Installing directly from the KDE Store runs the widget in pure QML mode. For hardware-accelerated KWin background blur and liquid glass effects, run the 1-line installer above to compile the optional blur module.
+> Installing from the KDE Store runs the widget in **pure QML mode**. All features (magnification wave, animations, padding, edge elevation, solid/transparent/translucent glass styles) work out of the box with zero build dependencies.
 
 ---
 
-### Option 3: Manual Installation from Source
+### Option 2: Enable Hardware KWin Blur (Optional — Build from Source)
 
-1. Clone this repository:
+For real hardware-accelerated KWin background blur behind the capsule, compile and install the optional C++ blur plugin.
 
-   ```bash
-   git clone https://github.com/Matt-Anis/plasma-macos-dock.git
-   cd plasma-macos-dock
-   ```
+#### 1. Install Build Dependencies for Your Distribution
 
-2. Build and install the C++ blur module and widget:
+* **Fedora / RHEL**:
+  ```bash
+  sudo dnf install cmake gcc-c++ extra-cmake-modules qt6-qtbase-devel qt6-qtdeclarative-devel kf6-kwindowsystem-devel libplasma-devel
+  ```
+* **Arch Linux / Manjaro / EndeavourOS**:
+  ```bash
+  sudo pacman -S --needed cmake gcc extra-cmake-modules qt6-base qt6-declarative kwindowsystem libplasma
+  ```
+* **Ubuntu / Debian / Pop!_OS**:
+  ```bash
+  sudo apt install cmake build-essential extra-cmake-modules qt6-base-dev qt6-declarative-dev libkf6windowsystem-dev libplasma-dev
+  ```
+* **openSUSE**:
+  ```bash
+  sudo zypper install cmake gcc-c++ extra-cmake-modules qt6-base-devel qt6-declarative-devel kf6-kwindowsystem-devel libplasma6-devel
+  ```
 
-   ```bash
-   cmake -B build -S .
-   cmake --build build
-   sudo cmake --install build
-   ```
+#### 2. Compile and Install
 
-3. Restart Plasma Shell to load the new QML plugin and widget:
+Clone the repository and build:
 
-   ```bash
-   systemctl --user restart plasma-plasmashell
-   ```
+```bash
+git clone https://github.com/Matt-Anis/plasma-macos-dock.git
+cd plasma-macos-dock
 
-4. Right-click your desktop or an existing panel, select **Add Widgets...**, and add **macOS Dock** to your screen.
+# If you already installed the widget from KDE Store (installs only the blur plugin):
+./install.sh --plugin-only
+
+# Or to build and install everything from source:
+./install.sh
+```
+
+*(Alternatively, run standard CMake commands: `cmake -B build -S . && cmake --build build && sudo cmake --install build`)*
+
+#### 3. Restart Plasma Shell
+
+Restart Plasma to load the new QML blur plugin:
+
+```bash
+systemctl --user restart plasma-plasmashell
+```
 
 ---
 
 ### Packaging for Release (Developers)
 
-To create a clean `.plasmoid` bundle ready to upload to [store.kde.org](https://store.kde.org):
+To create a clean `.plasmoid` bundle ready to upload to [store.kde.org](https://store.kde.org) or attach to GitHub Releases:
 
 ```bash
 ./package.sh
 ```
 
 This generates `com.github.mattanis.macosdock.plasmoid` in the project root.
-
-> [!TIP]
-> **Prefer a lightweight version without C++ build dependencies?**  
-> If you prefer a pure QML/JS version that requires no compilation or build tools, check out the [`without-blur` branch](https://github.com/Matt-Anis/plasma-macos-dock/tree/without-blur).
 
 ---
 
@@ -202,12 +210,13 @@ When icons magnify on hover, they can simultaneously lift upward away from the p
 
 ### Capsule Styling, Native Blur, and Liquid Glass
 
-The dock background capsule can be styled in four distinct visual modes:
+The dock background capsule can be styled in five distinct visual modes:
 
-- **Solid**: Flat or tinted surface using your chosen custom background color.
+- **Solid**: Flat surface using your chosen custom background color.
 - **Transparent**: Completely invisible container with icons floating directly above the wallpaper.
-- **System Blur**: Uses KWin's compositor to dynamically blur only behind the rounded capsule area (leaving the rest of the transparent panel unblurred).
-- **Liquid Glass**: Combines live KWin background blur with an internal specular gloss sheen, tinted translucency, and a sharp border.
+- **Translucent**: Semi-transparent tinted surface where you can pick your background color and fine-tune its opacity percentage (100% pure QML, no C++ compilation required).
+- **System Blur**: Uses KWin's compositor to dynamically blur behind the rounded capsule area (requires optional C++ module).
+- **Liquid Glass**: Combines live KWin background blur with an internal specular gloss sheen, tinted translucency, and a sharp border (requires optional C++ module).
 
 #### Live Blur & Glass Tuning Steppers
 When **System Blur** or **Liquid Glass** is active, you can fine-tune the optical presentation directly from the settings using native steppers:

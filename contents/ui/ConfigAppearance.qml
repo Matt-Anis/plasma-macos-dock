@@ -220,14 +220,24 @@ KCMUtils.SimpleKCM {
             model: [
                 i18nc("@option:combobox", "Solid"),
                 i18nc("@option:combobox", "Transparent"),
+                i18nc("@option:combobox", "Translucent"),
                 i18nc("@option:combobox", "System Blur"),
                 i18nc("@option:combobox", "Liquid Glass")
             ]
             currentIndex: Plasmoid.configuration.containerBackgroundType !== undefined ? Plasmoid.configuration.containerBackgroundType : 0
         }
 
+        QQC2.Label {
+            visible: containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
+            text: i18nc("@info:usagetip", "Hardware blur requires the optional C++ module from GitHub. If not installed, a translucent fallback is used.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.75
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+        }
+
         RowLayout {
-            visible: containerBackgroundTypeComboBox.currentIndex === 0 || containerBackgroundTypeComboBox.currentIndex === 2
+            visible: containerBackgroundTypeComboBox.currentIndex === 0 || containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
             Kirigami.FormData.label: i18nc("@label", "Background color:")
             spacing: Kirigami.Units.smallSpacing
 
@@ -257,7 +267,7 @@ KCMUtils.SimpleKCM {
 
         QQC2.SpinBox {
             id: blurOpacitySpinBox
-            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
             Kirigami.FormData.label: i18nc("@label:spinbox", "Capsule opacity:")
             from: 5
             to: 95
@@ -276,7 +286,7 @@ KCMUtils.SimpleKCM {
 
         QQC2.SpinBox {
             id: blurSaturationSpinBox
-            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            visible: containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
             Kirigami.FormData.label: i18nc("@label:spinbox", "Vibrancy (saturation):")
             from: 0
             to: 20
@@ -295,7 +305,7 @@ KCMUtils.SimpleKCM {
 
         QQC2.SpinBox {
             id: blurContrastSpinBox
-            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            visible: containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
             Kirigami.FormData.label: i18nc("@label:spinbox", "Blur contrast:")
             from: 5
             to: 15
@@ -314,7 +324,7 @@ KCMUtils.SimpleKCM {
 
         QQC2.SpinBox {
             id: blurBrightnessSpinBox
-            visible: containerBackgroundTypeComboBox.currentIndex === 2 || containerBackgroundTypeComboBox.currentIndex === 3
+            visible: containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
             Kirigami.FormData.label: i18nc("@label:spinbox", "Blur brightness:")
             from: 5
             to: 15

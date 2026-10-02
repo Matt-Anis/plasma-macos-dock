@@ -10,7 +10,7 @@ Item {
     id: root
 
     property real radius: Math.min(width, height) / 3
-    property int backgroundType: 0 // 0 = Solid, 1 = Transparent, 2 = SystemBlur, 3 = LiquidGlass
+    property int backgroundType: 0 // 0 = Solid, 1 = Transparent, 2 = Translucent, 3 = SystemBlur, 4 = LiquidGlass
     property color customBackgroundColor: "#202024"
     property int customBorderWidth: 1
     property color customBorderColor: "#38ffffff"
@@ -21,11 +21,11 @@ Item {
     property real blurContrast: 1.0
     property real blurBrightness: 1.0
 
-    // C++ KWin blur region loader
+    // C++ KWin blur region loader (only activated for SystemBlur and LiquidGlass)
     Loader {
         id: blurBridgeLoader
         anchors.fill: parent
-        active: root.backgroundType === 2 || root.backgroundType === 3
+        active: root.backgroundType === 3 || root.backgroundType === 4
         asynchronous: false
         source: "BlurAreaBridge.qml"
         property real radius: root.radius
@@ -54,11 +54,12 @@ Item {
     }
 
     // ==========================================
-    // MODE 2: SYSTEM BLUR (Translucent Tint + KWin Blur)
+    // MODE 2: TRANSLUCENT & MODE 3: SYSTEM BLUR
+    // (Translucent is pure QML tint; System Blur adds KWin blur behind it)
     // ==========================================
     Rectangle {
-        id: systemBlurBackground
-        visible: root.backgroundType === 2
+        id: translucentOrBlurBackground
+        visible: root.backgroundType === 2 || root.backgroundType === 3
         anchors.fill: parent
         radius: root.radius
         color: Qt.rgba(root.customBackgroundColor.r, root.customBackgroundColor.g, root.customBackgroundColor.b, root.blurOpacity)
@@ -67,11 +68,11 @@ Item {
     }
 
     // ==========================================
-    // MODE 3: LIQUID GLASS
+    // MODE 4: LIQUID GLASS
     // ==========================================
     Item {
         id: liquidGlassContainer
-        visible: root.backgroundType === 3
+        visible: root.backgroundType === 4
         anchors.fill: parent
 
         // Single clean glass base rectangle with crisp border
