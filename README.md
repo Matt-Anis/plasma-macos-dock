@@ -43,14 +43,17 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 The easiest way to get macOS Dock is directly through Plasma's built-in widget installer:
 
 1. Right-click your desktop or an existing panel and choose **Add Widgets…**
-2. Click **Get New Widgets…** $\rightarrow$ **Download New Plasma Widgets…** (or visit [store.kde.org](https://store.kde.org))
+2. Click **Get New Widgets…** $\rightarrow$ **Download New Plasma Widgets…** (or visit the [KDE Store / OpenDesktop Page](https://www.opendesktop.org/p/2376880/))
 3. Search for **macOS Dock** and click **Install**.
 
-Alternatively, download `com.github.mattanis.macosdock.plasmoid` from the [Releases](https://github.com/Matt-Anis/plasma-macos-dock/releases) page and install it using:
+Alternatively, download `com.github.mattanis.macosdock.plasmoid` from the [Releases](https://github.com/Matt-Anis/plasma-macos-dock/releases) page or [OpenDesktop](https://www.opendesktop.org/p/2376880/) and install it using:
 
 ```bash
 kpackagetool6 --type Plasma/Applet --install com.github.mattanis.macosdock.plasmoid
 ```
+
+> [!TIP]
+> **Recommended Panel Sizing**: We recommend setting your Plasma panel thickness (height for bottom/top panels, width for left/right panels) to **100px** to provide ideal headroom for hover magnification and lift elevation (or check **Auto-adjust panel thickness** in dock settings).
 
 > [!NOTE]
 > Installing from the KDE Store runs the widget in **pure QML mode**. All features (magnification wave, animations, padding, edge elevation, solid/transparent/translucent glass styles) work out of the box with zero build dependencies.
@@ -109,7 +112,7 @@ systemctl --user restart plasma-plasmashell
 
 ### Packaging for Release (Developers)
 
-To create a clean `.plasmoid` bundle ready to upload to [store.kde.org](https://store.kde.org) or attach to GitHub Releases:
+To create a clean `.plasmoid` bundle ready to upload to [KDE Store / OpenDesktop](https://www.opendesktop.org/p/2376880/) or attach to GitHub Releases:
 
 ```bash
 ./package.sh
@@ -304,12 +307,13 @@ The configuration backend extends KDE's `kcfg` schema with explicit definitions 
 For the most authentic dock presentation:
 
 1. **Plasma Panel Settings**:
+   - Panel thickness (height / width): Set to **100px** (or let the dock auto-adjust it) for optimal hover headroom and elevation clearance.
    - Panel mode: Set to **Fit Content** or centered floating.
    - Opacity: Set panel background to **Transparent** so the dock capsule renders its own background.
 2. **Dock Settings**:
    - **Icons & Dimensions**: Icon size `48px`, Icon spacing `4px`, Elevation `8px`.
    - **Magnification & Animation**: Zoom scale `1.5x`, Blast radius `2`, Animation `Spring physics`, Hover lift `12px`.
-   - **Capsule & Style**: Border thickness `1px`, Container background `Solid`.
+   - **Capsule & Style**: Border thickness `1px`, Container background `Solid` or `Translucent`.
 
 ---
 
