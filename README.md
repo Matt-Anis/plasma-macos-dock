@@ -121,32 +121,20 @@ This generates `com.github.mattanis.macosdock.plasmoid` in the project root.
 
 ## Compatibility
 
-> [!WARNING]
-> **Testing Status**: This widget was developed and **tested exclusively on KDE Plasma 6.6**. While it is built to target baseline Plasma 6 specifications, backward compatibility with older point releases (Plasma 6.0 through 6.5) is theoretical and has not yet been verified across different distributions. If you encounter issues on earlier Plasma 6 versions, please report them!
+> [!IMPORTANT]
+> **Minimum Supported Version**: **KDE Plasma 6.3.0+**
+>
+> * **Plasma 6.3+**: Proven to work reliably across multiple distributions (pure QML mode).
+> * **Plasma 6.0 – 6.2**: Failed tests. A fix could be possible but not proven, and it is simpler to upgrade the Plasma Shell version.
+> * **Plasma 5.x**: Incompatible (strictly designed for Plasma 6).
 
-### Requirements
+---
 
-| Component | Minimum Version | Notes |
-| :--- | :--- | :--- |
-| **KDE Plasma** | `6.0.0+` | **Not compatible with KDE Plasma 5** |
-| **KDE Frameworks (KF6)** | `6.0.0+` | Requires `kirigami`, `ksvg`, `kwindowsystem`, `kcmutils` |
-| **Qt** | `6.6.0+` | Built on Qt 6 Quick layouts and components |
+### Why C++ Blur Requires Local Compilation (No Universal Installer)
 
-### Build Dependencies
-To compile the native C++ blur module on this branch, ensure your system has development packages installed:
-- `cmake` (>= 3.16) and a C++17 compiler (`gcc-c++` or `clang`)
-- `extra-cmake-modules` (ECM)
-- `kf6-kwindowsystem-devel` (or `libkf6windowsystem-dev` on Debian/Ubuntu)
-- `qt6-base-devel`, `qt6-declarative-devel` (or `qt6-base-dev`, `qt6-declarative-dev`)
-- `libplasma-devel` (or `libplasma-dev` on Debian/Ubuntu, `libplasma6-devel` on openSUSE)
+The standard `.plasmoid` widget from the KDE Store / GitHub Releases is 100% pure QML and works out of the box with zero build dependencies.
 
-### Required Runtime Packages
-Most standard Plasma 6 desktop installations include these by default, but minimal distributions (e.g., minimal Arch, Gentoo, Fedora Minimal) may require installing them explicitly:
-
-- `qt6-5compat` (provides `Qt5Compat.GraphicalEffects` for shader fallbacks)
-- `plasma-workspace` (provides `libtaskmanager`, DBus helpers, and MPRIS controls)
-- `plasma-pa` (provides audio stream indicators on task badges)
-- `kpipewire` (provides live window preview thumbnails)
+The optional C++ hardware blur module cannot be distributed via an automated universal installer or pre-compiled binary because development packages and library versions differ across distributions. Trying to automate this could pull incompatible dependencies. Users who want native hardware blur should install the build dependencies for their distribution (listed above) and compile locally with CMake.
 
 ---
 
