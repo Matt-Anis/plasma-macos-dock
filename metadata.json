@@ -15,5 +15,8 @@
         "Name": "macOS Dock",
         "Website": "https://github.com/Matt-Anis/plasma-macos-dock"
     },
-    "X-Plasma-API-Minimum-Version": "6.0"
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+       "org.kde.plasma.multitasking"
+    ]
 }
