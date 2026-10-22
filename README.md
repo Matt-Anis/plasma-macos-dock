@@ -21,6 +21,7 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
   - [Capsule Styling, Native Blur, and Liquid Glass](#capsule-styling-native-blur-and-liquid-glass)
   - [External Running Indicator Dots](#external-running-indicator-dots)
   - [Pinned and Running Tasks Divider](#pinned-and-running-tasks-divider)
+  - [Pinned App Shortcuts (Super + 1–9)](#pinned-app-shortcuts-super--19)
   - [All-Edge Screen Placement Support](#all-edge-screen-placement-support)
 - [How It Works and Architectural Decisions](#how-it-works-and-architectural-decisions)
   - [Why Build on Icons-Only Task Manager](#why-build-on-icons-only-task-manager)
@@ -232,6 +233,16 @@ Running applications display a subtle indicator dot placed in the capsule paddin
 The dock automatically generates a subtle vertical or horizontal separator line between your pinned application launchers and unpinned running windows.
 
 - **How to use**: Pin favorite applications to your dock. When you open an unpinned app, a clean translucent divider appears automatically between the launcher section and the open window section.
+
+### Pinned App Shortcuts (Super + 1–9)
+
+Press **Super + 1** through **Super + 9** to launch or activate the app at the matching dock position without touching the mouse.
+
+- **How to use**: Just press the shortcut. A pinned app follows the same behavior as clicking its icon: it launches if not running, activates if running, and cycles through windows when grouped.
+- **Dock settings**: Open **Configure macOS Dock → Shortcuts** to enable or disable the shortcuts, restrict them to pinned apps, and choose whether shortcuts launch apps that are not running. The same page has a button that opens the global shortcut editor.
+- **Customizing keys**: The shortcuts are registered with KDE's global shortcut system, so individual key bindings can also be changed or cleared under **System Settings → Shortcuts → macOS Dock**.
+- **Note**: Requires Plasma 6.4 or newer (the D-Bus signal support used to receive global shortcuts). On Plasma 6.3 the dock works normally, but these shortcuts are unavailable.
+- **Conflicts**: Plasma's built-in Task Manager registers the same `Super + 1–9` shortcuts. The dock takes them over for the current session without modifying the stock shortcut configuration.
 
 ### All-Edge Screen Placement Support
 

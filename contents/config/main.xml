@@ -253,6 +253,18 @@
       </choices>
       <default>0</default>
     </entry>
+    <entry name="shortcutsEnabled" type="Bool">
+      <label>Whether the Super+1 through Super+9 global shortcuts are enabled.</label>
+      <default>true</default>
+    </entry>
+    <entry name="shortcutsPinnedOnly" type="Bool">
+      <label>Whether the Super+number shortcuts only activate pinned applications.</label>
+      <default>true</default>
+    </entry>
+    <entry name="shortcutsLaunchMissing" type="Bool">
+      <label>Whether the Super+number shortcuts launch pinned applications that are not running.</label>
+      <default>true</default>
+    </entry>
   </group>
 
 </kcfg>

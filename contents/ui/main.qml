@@ -582,6 +582,11 @@ PlasmoidItem {
         watchedService: "org.kde.KWin.Effect.WindowView1"
     }
 
+    // Handles the global "Super + 1" … "Super + 9" shortcuts. It is created at
+    // runtime because org.kde.plasma.workspace.dbus gained SignalWatcher in
+    // Plasma 6.4; on older versions the dock keeps working without shortcuts.
+    property var globalShortcutHandler: null
+
     readonly property Component taskInitComponent: Component {
         Timer {
             interval: 200
@@ -842,17 +847,26 @@ PlasmoidItem {
         }
     }
 
-    // This is called by plasmashell in response to a Meta+number shortcut.
-    // TODO: Change type to int
-    function activateTaskAtIndex(index: var): void {
-        if (typeof index !== "number") {
+    // Called by the global shortcut handler in response to a Meta+number press.
+    function activateTaskAtIndex(index: int): void {
+        if (Plasmoid.configuration.shortcutsEnabled === false) {
             return;
         }
 
         const task = taskRepeater.itemAt(index) as Task;
-        if (task) {
-            TaskTools.activateTask(task.modelIndex(), task.model, null, task, Plasmoid, this, effectWatcher.registered);
+        if (!task) {
+            return;
         }
+
+        if (Plasmoid.configuration.shortcutsPinnedOnly !== false && !task.isPinned) {
+            return;
+        }
+
+        if (Plasmoid.configuration.shortcutsLaunchMissing === false && task.model.IsLauncher) {
+            return;
+        }
+
+        TaskTools.activateTask(task.modelIndex(), task.model, null, task, Plasmoid, this, effectWatcher.registered);
     }
 
     function createContextMenu(rootTask, modelIndex, args = {}) {
@@ -881,6 +895,16 @@ PlasmoidItem {
         TaskTools.taskManagerInstanceCount += 1;
         requestLayout.connect(iconGeometryTimer.restart);
         applyPanelTransparency();
+
+        const shortcutsComponent = Qt.createComponent("GlobalShortcuts.qml");
+        if (shortcutsComponent.status === Component.Ready) {
+            globalShortcutHandler = shortcutsComponent.createObject(tasks, {
+                tasksRoot: tasks,
+                appletId: Plasmoid.id,
+            });
+        } else if (shortcutsComponent.status === Component.Error) {
+            console.warn("Cannot enable Super+1…9 shortcuts:", shortcutsComponent.errorString());
+        }
     }
 
     Component.onDestruction: {

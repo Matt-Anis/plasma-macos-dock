@@ -19,4 +19,9 @@ ConfigModel {
          icon: "preferences-desktop"
          source: "ConfigBehavior.qml"
     }
+    ConfigCategory {
+         name: i18nc("@title:group for configuration dialog page", "Shortcuts")
+         icon: "preferences-desktop-keyboard-shortcuts"
+         source: "ConfigShortcuts.qml"
+    }
 }
