@@ -156,7 +156,7 @@ PlasmoidItem {
 
     Timer {
         id: resetHoverTimer
-        interval: 280
+        interval: 90
         onTriggered: {
             tasks.hoveredTaskIndex = -1;
             tasks.continuousHoverPosition = -1.0;

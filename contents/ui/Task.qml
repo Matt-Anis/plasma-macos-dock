@@ -38,8 +38,8 @@ PlasmaCore.ToolTipArea {
         id: springAnim
         target: task
         property: "zoomFactor"
-        spring: 6.0
-        damping: 0.45
+        spring: 18.0
+        damping: 0.6
         epsilon: 0.002
     }
 
@@ -47,11 +47,12 @@ PlasmaCore.ToolTipArea {
         id: smoothAnim
         target: task
         property: "zoomFactor"
-        duration: 260
+        duration: 120
         easing.type: Easing.OutCubic
     }
 
     Behavior on zoomFactor {
+        enabled: !tasksRoot || tasksRoot.continuousHoverPosition < 0
         animation: (tasksRoot && tasksRoot.zoomAnimationType === 1) ? smoothAnim : springAnim
     }
 
@@ -347,8 +348,6 @@ PlasmaCore.ToolTipArea {
 
     onIsTaskHoveredChanged: {
         if (isTaskHovered) {
-            task.forceActiveFocus(Qt.MouseFocusReason);
-            task.updateMainItemBindings();
             hoverToolTipTimer.restart();
             if (taskHoverHandler && taskHoverHandler.hovered) {
                 reportContinuousHover(taskHoverHandler.point.position);
