@@ -31,33 +31,7 @@ PlasmaCore.ToolTipArea {
     rotation: Plasmoid.configuration.reverseMode && (tasksRoot ? tasksRoot.vertical : false) ? 180 : 0
 
     readonly property real targetZoomFactor: (!inPopup && tasksRoot) ? tasksRoot.magnificationFactorForIndex(index) : 0.0
-
-    property real zoomFactor: 0.0
-
-    SpringAnimation {
-        id: springAnim
-        target: task
-        property: "zoomFactor"
-        spring: 3.5
-        damping: 0.35
-        epsilon: 0.002
-    }
-
-    NumberAnimation {
-        id: smoothAnim
-        target: task
-        property: "zoomFactor"
-        duration: 260
-        easing.type: Easing.OutCubic
-    }
-
-    Behavior on zoomFactor {
-        animation: (tasksRoot && tasksRoot.zoomAnimationType === 1) ? smoothAnim : springAnim
-    }
-
-    onTargetZoomFactorChanged: {
-        zoomFactor = targetZoomFactor;
-    }
+    readonly property real zoomFactor: targetZoomFactor
 
     readonly property real maxElevatedReach: {
         if (!tasksRoot) return 60;
@@ -71,7 +45,9 @@ PlasmaCore.ToolTipArea {
     readonly property real effectiveZoom: Math.max(0.0, zoomFactor)
     readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * effectiveZoom
     readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * effectiveZoom
-    readonly property real extraSpan: (tasksRoot && !inPopup) ? (tasksRoot.iconSize * (currentScale - 1.0) * 0.7) : 0.0
+    readonly property real extraSpan: (tasksRoot && !inPopup)
+        ? (tasksRoot.iconSize * (currentScale - 1.0) + (tasksRoot.iconSpacing * 0.5) * effectiveZoom)
+        : 0.0
 
     readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
     readonly property bool isDividerTask: tasksRoot && tasksRoot.hasDivider && tasksRoot.firstUnpinnedIndex === index
@@ -188,7 +164,7 @@ PlasmaCore.ToolTipArea {
         if (!completed) {
             return;
         }
-        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || zoomFactor > 0)) {
+        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || tasksRoot.dockHoverProgress > 0 || zoomFactor > 0)) {
             if (moveAnim.running) {
                 moveAnim.stop();
                 translateTransform.x = 0;
@@ -209,7 +185,7 @@ PlasmaCore.ToolTipArea {
         if (!completed) {
             return;
         }
-        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || zoomFactor > 0)) {
+        if (tasksRoot && tasksRoot.zoomEnabled && (tasksRoot.hoveredTaskIndex >= 0 || tasksRoot.dockHoverProgress > 0 || zoomFactor > 0)) {
             if (moveAnim.running) {
                 moveAnim.stop();
                 translateTransform.y = 0;
@@ -323,12 +299,34 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    readonly property int halfSpacing: Math.ceil((tasksRoot ? tasksRoot.iconSpacing : 4) / 2)
+
+    function reportContinuousHover(pos: point): void {
+        if (!tasksRoot || !tasksRoot.zoomEnabled) {
+            return;
+        }
+        const isVert = tasksRoot.vertical;
+        const totalSpan = isVert ? task.height : task.width;
+        const divOffset = task.dividerOffset || 0;
+        const iconSpan = Math.max(1, totalSpan - divOffset);
+        const rawCoord = (isVert ? pos.y : pos.x) - halfSpacing;
+        const iconCoord = rawCoord - divOffset;
+        let ratio = (iconCoord - (iconSpan / 2)) / iconSpan;
+
+        const mirrored = tasksRoot.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, isVert);
+        if (mirrored) {
+            ratio = -ratio;
+        }
+
+        tasksRoot.setHoverPosition(index, ratio);
+    }
+
     onIsTaskHoveredChanged: {
         if (isTaskHovered) {
-            task.forceActiveFocus(Qt.MouseFocusReason);
-            task.updateMainItemBindings();
             hoverToolTipTimer.restart();
-            if (tasksRoot) {
+            if (taskHoverHandler && taskHoverHandler.hovered) {
+                reportContinuousHover(taskHoverHandler.point.position);
+            } else if (tasksRoot) {
                 tasksRoot.setHoveredTask(index);
             }
         } else {
@@ -562,22 +560,31 @@ PlasmaCore.ToolTipArea {
             top: tasksRoot.vertical ? parent.top : (tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? parent.top : undefined)
             bottom: tasksRoot.vertical ? parent.bottom : (tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge ? parent.bottom : undefined)
 
-            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge)
-                ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
-            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge)
-                ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0
-            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge)
-                ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
-            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge)
-                ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0
+            topMargin: tasksRoot.vertical
+                ? -task.halfSpacing
+                : ((tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0)
+            bottomMargin: tasksRoot.vertical
+                ? -task.halfSpacing
+                : ((tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? -(tasksRoot ? tasksRoot.verticalPadding : 8) : 0)
+            leftMargin: !tasksRoot.vertical
+                ? -task.halfSpacing
+                : ((tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0)
+            rightMargin: !tasksRoot.vertical
+                ? -task.halfSpacing
+                : ((tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? -(tasksRoot ? tasksRoot.horizontalPadding : 8) : 0)
         }
 
-        width: tasksRoot.vertical ? (parent.width + (tasksRoot ? tasksRoot.horizontalPadding : 8) + task.maxElevatedReach) : parent.width
-        height: !tasksRoot.vertical ? (parent.height + (tasksRoot ? tasksRoot.verticalPadding : 8) + task.maxElevatedReach) : parent.height
+        width: tasksRoot.vertical ? (parent.width + (tasksRoot ? tasksRoot.horizontalPadding : 8) + task.maxElevatedReach) : (parent.width + task.halfSpacing * 2)
+        height: !tasksRoot.vertical ? (parent.height + (tasksRoot ? tasksRoot.verticalPadding : 8) + task.maxElevatedReach) : (parent.height + task.halfSpacing * 2)
 
         HoverHandler {
             id: taskHoverHandler
             enabled: !task.inPopup
+            onPointChanged: {
+                if (hovered && tasksRoot && tasksRoot.zoomEnabled) {
+                    task.reportContinuousHover(point.position);
+                }
+            }
         }
 
         TapHandler {
