@@ -37,6 +37,15 @@ ColumnLayout {
     property bool hasTrackInATitle: false
     property int orientation: ListView.Vertical // vertical for compact single-window tooltips
 
+    // X11 legacy WindowThumbnail is only available on X11 when supported by libplasma (deprecated/removed in Plasma 6.8+)
+    readonly property bool x11ThumbnailAvailable: {
+        if (KWindowSystem.isPlatformWayland) {
+            return false;
+        }
+        const comp = Qt.createComponent("X11Thumbnail.qml");
+        return comp.status === Component.Ready;
+    }
+
     // HACK: Avoid blank space in the tooltip after closing a window
     ListView.onPooled: width = height = 0
     ListView.onReused: width = height = undefined
@@ -253,17 +262,10 @@ ColumnLayout {
             // shadow can cover up the highlight
             anchors.margins: Kirigami.Units.smallSpacing * 2
 
-            sourceComponent: root.isMinimized || pipeWireLoader.active ? iconItem : x11Thumbnail
+            source: (!root.isMinimized && !pipeWireLoader.active && root.x11ThumbnailAvailable) ? "X11Thumbnail.qml" : ""
+            sourceComponent: (root.isMinimized || pipeWireLoader.active || !root.x11ThumbnailAvailable) ? iconItem : undefined
 
-            Component {
-                id: x11Thumbnail
-
-                PlasmaCore.WindowThumbnail {
-                    winId: thumbnailSourceItem.winId
-                }
-            }
-
-            // when minimized, we don't have a preview on X11, so show the icon
+            // when minimized or when X11 thumbnail is unavailable, show the icon
             Component {
                 id: iconItem
 
