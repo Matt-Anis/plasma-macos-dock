@@ -40,7 +40,7 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
 
 ## Installation
 
-### Option 1: Install from KDE Store (Recommended — No Compilation)
+### Option 1: Install from KDE Store or Direct Clone (Recommended — No Compilation)
 
 The easiest way to get macOS Dock is directly through Plasma's built-in widget installer:
 
@@ -48,7 +48,16 @@ The easiest way to get macOS Dock is directly through Plasma's built-in widget i
 2. Click **Get New Widgets…** $\rightarrow$ **Download New Plasma Widgets…** (or visit the [KDE Store / OpenDesktop Page](https://www.opendesktop.org/p/2376880/))
 3. Search for **macOS Dock** and click **Install**.
 
-Alternatively, download `com.github.mattanis.macosdock.plasmoid` from the [Releases](https://github.com/Matt-Anis/plasma-macos-dock/releases) page or [OpenDesktop](https://www.opendesktop.org/p/2376880/) and install it using:
+#### Alternative: Manual Pure-QML Install (Git Clone or .plasmoid)
+
+You can clone the repository directly into your local plasmoids folder with zero build dependencies:
+
+```bash
+git clone https://github.com/Matt-Anis/plasma-macos-dock.git ~/.local/share/plasma/plasmoids/com.github.mattanis.macosdock
+systemctl --user restart plasma-plasmashell
+```
+
+Or download `com.github.mattanis.macosdock.plasmoid` from the [Releases](https://github.com/Matt-Anis/plasma-macos-dock/releases) page and install it using:
 
 ```bash
 kpackagetool6 --type Plasma/Applet --install com.github.mattanis.macosdock.plasmoid
@@ -58,7 +67,7 @@ kpackagetool6 --type Plasma/Applet --install com.github.mattanis.macosdock.plasm
 > **Recommended Panel Sizing**: We recommend setting your Plasma panel thickness (height for bottom/top panels, width for left/right panels) to **100px** to provide ideal headroom for hover magnification and lift elevation (or check **Auto-adjust panel thickness** in dock settings).
 
 > [!NOTE]
-> Installing from the KDE Store runs the widget in **pure QML mode**. All features (magnification wave, animations, padding, edge elevation, solid/transparent/translucent glass styles) work out of the box with zero build dependencies.
+> Installing from the KDE Store, downloading the `.plasmoid` bundle, or cloning directly into your plasmoids folder runs the widget in **pure QML mode**. All features (continuous magnification wave, animations, padding, edge elevation, translucent glass styles, and native shortcuts) work out of the box with zero compilation or build dependencies. The separate `without-blur` branch has been retired as this main codebase now natively supports pure QML mode with optional hardware blur.
 
 ---
 

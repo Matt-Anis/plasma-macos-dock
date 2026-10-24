@@ -1,0 +1,41 @@
+name: Feature Request
+description: Suggest an idea, enhancement, or macOS behavior for macOS Dock
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please describe your idea and how it fits into the macOS dock experience on KDE Plasma 6.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: Is your feature request related to a problem, a limitation, or a missing macOS behavior?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Feature Description
+      description: Describe what you would like to see happen and how it should work.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ui_settings
+    attributes:
+      label: Settings or Configuration
+      description: Should this feature have configurable options in the Appearance or Behavior settings?
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context, Screenshots, or References
+      description: Add any screenshots, mockups, macOS reference videos, or links here.
+    validations:
+      required: false

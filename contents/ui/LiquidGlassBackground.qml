@@ -21,23 +21,23 @@ Item {
     property real blurContrast: 1.0
     property real blurBrightness: 1.0
 
-    // C++ KWin blur region loader (only activated for SystemBlur and LiquidGlass)
+    // Check if the optional C++ blur plugin is installed and ready
+    readonly property bool hasBlurPlugin: {
+        const comp = Qt.createComponent("BlurAreaBridge.qml");
+        return comp.status === Component.Ready;
+    }
+
+    // C++ KWin blur region loader (only activated for SystemBlur and LiquidGlass if plugin is installed)
     Loader {
         id: blurBridgeLoader
         anchors.fill: parent
-        active: root.backgroundType === 3 || root.backgroundType === 4
+        active: (root.backgroundType === 3 || root.backgroundType === 4) && root.hasBlurPlugin
         asynchronous: false
-        source: "BlurAreaBridge.qml"
+        source: root.hasBlurPlugin ? "BlurAreaBridge.qml" : ""
         property real radius: root.radius
         property real saturation: root.blurSaturation
         property real contrast: root.blurContrast
         property real intensity: root.blurBrightness
-
-        onStatusChanged: {
-            if (status === Loader.Error) {
-                console.warn("[macOS Dock] com.github.mattanis.macosdock.blur C++ plugin not loaded, running without KWin blur.");
-            }
-        }
     }
 
     // ==========================================

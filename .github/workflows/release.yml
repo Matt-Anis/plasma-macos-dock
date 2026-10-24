@@ -1,0 +1,124 @@
+name: Automated Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Next Semantic Version
+        id: semver
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "=== Analyzing PR Description for Release Type ==="
+          HAS_MAJOR=false
+          HAS_MINOR=false
+          HAS_PATCH=false
+          HAS_NONE=false
+
+          echo "$PR_BODY" | grep -iqE "\[x\][[:space:]]*major|release:[[:space:]]*major" && HAS_MAJOR=true
+          echo "$PR_BODY" | grep -iqE "\[x\][[:space:]]*minor|release:[[:space:]]*minor" && HAS_MINOR=true
+          echo "$PR_BODY" | grep -iqE "\[x\][[:space:]]*patch|release:[[:space:]]*patch" && HAS_PATCH=true
+          echo "$PR_BODY" | grep -iqE "\[x\][[:space:]]*none" && HAS_NONE=true
+
+          TOTAL_CHECKED=0
+          [ "$HAS_MAJOR" = "true" ] && TOTAL_CHECKED=$((TOTAL_CHECKED + 1))
+          [ "$HAS_MINOR" = "true" ] && TOTAL_CHECKED=$((TOTAL_CHECKED + 1))
+          [ "$HAS_PATCH" = "true" ] && TOTAL_CHECKED=$((TOTAL_CHECKED + 1))
+          [ "$HAS_NONE" = "true" ] && TOTAL_CHECKED=$((TOTAL_CHECKED + 1))
+
+          if [ "$TOTAL_CHECKED" -gt 1 ]; then
+            echo "::notice::Multiple release options checked ($TOTAL_CHECKED). Applying strict precedence: major > minor > patch."
+          fi
+
+          if [ "$HAS_MAJOR" = "true" ]; then
+            BUMP_TYPE="major"
+          elif [ "$HAS_MINOR" = "true" ]; then
+            BUMP_TYPE="minor"
+          elif [ "$HAS_PATCH" = "true" ]; then
+            BUMP_TYPE="patch"
+          elif [ "$HAS_NONE" = "true" ]; then
+            echo "Release type set to 'none'. Skipping release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            echo "No release checkbox marked. Defaulting to patch release."
+            BUMP_TYPE="patch"
+          fi
+
+          echo "Selected bump type: $BUMP_TYPE"
+
+          # Get latest release tag or default to v1.0.0
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Current latest tag: $LATEST_TAG"
+
+          CLEAN_VERSION="${LATEST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CLEAN_VERSION"
+          MAJOR=${MAJOR:-1}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+
+          case "$BUMP_TYPE" in
+            major)
+              NEW_MAJOR=$((MAJOR + 1))
+              NEW_MINOR=0
+              NEW_PATCH=0
+              ;;
+            minor)
+              NEW_MAJOR=$MAJOR
+              NEW_MINOR=$((MINOR + 1))
+              NEW_PATCH=0
+              ;;
+            patch)
+              NEW_MAJOR=$MAJOR
+              NEW_MINOR=$MINOR
+              NEW_PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="${NEW_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+          NEW_TAG="v${NEW_VERSION}"
+
+          echo "New tag: $NEW_TAG"
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Build Plasmoid Package
+        if: steps.semver.outputs.skip != 'true'
+        run: |
+          chmod +x ./package.sh
+          ./package.sh
+
+      - name: Publish GitHub Release
+        if: steps.semver.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          TAG_NAME: ${{ steps.semver.outputs.tag }}
+        run: |
+          RELEASE_TITLE="${PR_TITLE:-Release $TAG_NAME}"
+          RELEASE_NOTES="${PR_BODY:-Automated release for $TAG_NAME}"
+
+          echo "Creating release $TAG_NAME with title: $RELEASE_TITLE"
+
+          gh release create "$TAG_NAME" \
+            com.github.mattanis.macosdock.plasmoid \
+            --title "$RELEASE_TITLE" \
+            --notes "$RELEASE_NOTES" \
+            --target master

@@ -19,6 +19,7 @@ KCMUtils.SimpleKCM {
     id: root
 
     readonly property bool plasmaPaAvailable: Qt.createComponent("PulseAudio.qml").status === Component.Ready
+    readonly property bool blurPluginAvailable: Qt.createComponent("BlurAreaBridge.qml").status === Component.Ready
     readonly property bool plasmoidVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property bool iconOnly: true
 
@@ -228,8 +229,8 @@ KCMUtils.SimpleKCM {
         }
 
         QQC2.Label {
-            visible: containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4
-            text: i18nc("@info:usagetip", "Hardware blur requires the optional C++ module from GitHub. If not installed, a translucent fallback is used.")
+            visible: (containerBackgroundTypeComboBox.currentIndex === 3 || containerBackgroundTypeComboBox.currentIndex === 4) && !root.blurPluginAvailable
+            text: i18nc("@info:usagetip", "Hardware blur requires the optional C++ module from GitHub. Running in pure QML mode with a translucent glass fallback.")
             font: Kirigami.Theme.smallFont
             opacity: 0.75
             wrapMode: Text.WordWrap
