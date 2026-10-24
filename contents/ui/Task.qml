@@ -38,8 +38,8 @@ PlasmaCore.ToolTipArea {
         id: springAnim
         target: task
         property: "zoomFactor"
-        spring: 3.5
-        damping: 0.35
+        spring: 6.0
+        damping: 0.45
         epsilon: 0.002
     }
 
@@ -71,7 +71,9 @@ PlasmaCore.ToolTipArea {
     readonly property real effectiveZoom: Math.max(0.0, zoomFactor)
     readonly property real currentScale: 1.0 + ((tasksRoot ? tasksRoot.zoomMultiplier : 1.5) - 1.0) * effectiveZoom
     readonly property real currentHoverLift: (tasksRoot ? tasksRoot.hoverElevation : 12) * effectiveZoom
-    readonly property real extraSpan: (tasksRoot && !inPopup) ? (tasksRoot.iconSize * (currentScale - 1.0) * 0.7) : 0.0
+    readonly property real extraSpan: (tasksRoot && !inPopup)
+        ? (tasksRoot.iconSize * (currentScale - 1.0) + (tasksRoot.iconSpacing * 0.5) * effectiveZoom)
+        : 0.0
 
     readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
     readonly property bool isDividerTask: tasksRoot && tasksRoot.hasDivider && tasksRoot.firstUnpinnedIndex === index
@@ -323,12 +325,34 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    function reportContinuousHover(pos: point): void {
+        if (!tasksRoot || !tasksRoot.zoomEnabled) {
+            return;
+        }
+        const isVert = tasksRoot.vertical;
+        const totalSpan = isVert ? task.height : task.width;
+        const divOffset = task.dividerOffset || 0;
+        const iconSpan = Math.max(1, totalSpan - divOffset);
+        const rawCoord = isVert ? pos.y : pos.x;
+        const iconCoord = rawCoord - divOffset;
+        let ratio = (iconCoord - (iconSpan / 2)) / iconSpan;
+
+        const mirrored = tasksRoot.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, isVert);
+        if (mirrored) {
+            ratio = -ratio;
+        }
+
+        tasksRoot.setHoverPosition(index, ratio);
+    }
+
     onIsTaskHoveredChanged: {
         if (isTaskHovered) {
             task.forceActiveFocus(Qt.MouseFocusReason);
             task.updateMainItemBindings();
             hoverToolTipTimer.restart();
-            if (tasksRoot) {
+            if (taskHoverHandler && taskHoverHandler.hovered) {
+                reportContinuousHover(taskHoverHandler.point.position);
+            } else if (tasksRoot) {
                 tasksRoot.setHoveredTask(index);
             }
         } else {
@@ -578,6 +602,11 @@ PlasmaCore.ToolTipArea {
         HoverHandler {
             id: taskHoverHandler
             enabled: !task.inPopup
+            onPointChanged: {
+                if (hovered && tasksRoot && tasksRoot.zoomEnabled) {
+                    task.reportContinuousHover(point.position);
+                }
+            }
         }
 
         TapHandler {

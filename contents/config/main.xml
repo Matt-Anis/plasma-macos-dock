@@ -231,7 +231,7 @@
       <label>Zoom scale multiplier on hover (e.g. 1.5 = 1.5x).</label>
       <default>1.5</default>
       <min>1.0</min>
-      <max>2.0</max>
+      <max>3.5</max>
     </entry>
     <entry name="zoomBlastRadius" type="Int">
       <label>Number of neighboring icons affected by hover magnification on each side.</label>

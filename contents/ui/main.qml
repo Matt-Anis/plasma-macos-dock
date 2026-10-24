@@ -137,18 +137,21 @@ PlasmoidItem {
         : 0
 
     property int hoveredTaskIndex: -1
+    property real continuousHoverPosition: -1.0
 
     function magnificationFactorForIndex(index: int): real {
-        if (!zoomEnabled || hoveredTaskIndex < 0) {
+        if (!zoomEnabled || continuousHoverPosition < 0.0) {
             return 0.0;
         }
-        const dist = Math.abs(index - hoveredTaskIndex);
-        if (dist > zoomBlastRadius) {
+        const dist = Math.abs(index - continuousHoverPosition);
+        const maxReach = zoomBlastRadius + 0.5;
+        if (dist >= maxReach) {
             return 0.0;
         }
-        const u = dist / (zoomBlastRadius + 1);
-        const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
-        return cosVal * cosVal;
+        const u = dist / maxReach;
+        const linearFalloff = 1.0 - u;
+        const smoothTail = 0.5 * (1.0 + Math.cos(Math.PI * u));
+        return (0.6 * linearFalloff + 0.4 * smoothTail) * linearFalloff;
     }
 
     Timer {
@@ -156,12 +159,19 @@ PlasmoidItem {
         interval: 280
         onTriggered: {
             tasks.hoveredTaskIndex = -1;
+            tasks.continuousHoverPosition = -1.0;
         }
     }
 
-    function setHoveredTask(index: int): void {
+    function setHoverPosition(index: int, offsetRatio: real): void {
         resetHoverTimer.stop();
         hoveredTaskIndex = index;
+        const clampedOffset = Math.max(-0.5, Math.min(0.5, offsetRatio));
+        continuousHoverPosition = index + clampedOffset;
+    }
+
+    function setHoveredTask(index: int): void {
+        setHoverPosition(index, 0.0);
     }
 
     function clearHoveredTask(index: int): void {
@@ -204,16 +214,18 @@ PlasmoidItem {
 
     readonly property real zoomFactorSum: {
         let sum = 1.0;
+        const maxReach = zoomBlastRadius + 0.5;
         for (let d = 1; d <= zoomBlastRadius; ++d) {
-            const u = d / (zoomBlastRadius + 1);
-            const cosVal = 0.5 * (1.0 + Math.cos(Math.PI * u));
-            sum += 2.0 * (cosVal * cosVal);
+            const u = d / maxReach;
+            const linearFalloff = 1.0 - u;
+            const smoothTail = 0.5 * (1.0 + Math.cos(Math.PI * u));
+            sum += 2.0 * ((0.6 * linearFalloff + 0.4 * smoothTail) * linearFalloff);
         }
         return sum;
     }
 
     readonly property real configuredZoomSpanFactor: zoomEnabled
-        ? ((configuredZoomMultiplier - 1.0) * 0.7 * zoomFactorSum)
+        ? ((configuredZoomMultiplier - 1.0) * 1.0 * zoomFactorSum)
         : 0.0
 
     readonly property real fixedOverhead: {
@@ -251,7 +263,7 @@ PlasmoidItem {
     }
 
     readonly property real zoomSpanFactor: zoomEnabled
-        ? ((zoomMultiplier - 1.0) * 0.7 * zoomFactorSum)
+        ? ((zoomMultiplier - 1.0) * 1.0 * zoomFactorSum)
         : 0.0
 
     readonly property int effectiveIconSpacing: (iconSize < 28)

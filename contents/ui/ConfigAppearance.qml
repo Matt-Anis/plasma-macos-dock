@@ -172,7 +172,7 @@ KCMUtils.SimpleKCM {
             visible: zoomEnabledCheckBox.checked
             Kirigami.FormData.label: i18nc("@label:spinbox", "Zoom scale:")
             from: 10
-            to: 20
+            to: 35
             stepSize: 1
             value: Math.round((Plasmoid.configuration.zoomMultiplier !== undefined ? Plasmoid.configuration.zoomMultiplier : 1.5) * 10)
             textFromValue: function(value, locale) {
