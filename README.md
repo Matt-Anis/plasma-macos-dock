@@ -15,17 +15,19 @@ A native widget for KDE Plasma 6 that brings a smooth, responsive macOS dock-lik
   - [Custom Icon Sizing and Spacing](#custom-icon-sizing-and-spacing)
   - [Capsule Padding and Edge Elevation](#capsule-padding-and-edge-elevation)
   - [Auto-Shrinking and Progressive Magnification](#auto-shrinking-and-progressive-magnification)
-  - [Interactive Magnification Wave](#interactive-magnification-wave)
+  - [Interactive Continuous Magnification Wave](#interactive-continuous-magnification-wave)
   - [Spring and Smooth Animation Physics](#spring-and-smooth-animation-physics)
   - [Hover Lift Elevation](#hover-lift-elevation)
   - [Capsule Styling, Native Blur, and Liquid Glass](#capsule-styling-native-blur-and-liquid-glass)
   - [External Running Indicator Dots](#external-running-indicator-dots)
   - [Pinned and Running Tasks Divider](#pinned-and-running-tasks-divider)
+  - [Native Task Manager Shortcuts (Meta+1..9)](#native-task-manager-shortcuts-meta19)
   - [All-Edge Screen Placement Support](#all-edge-screen-placement-support)
 - [How It Works and Architectural Decisions](#how-it-works-and-architectural-decisions)
   - [Why Build on Icons-Only Task Manager](#why-build-on-icons-only-task-manager)
   - [Sub-Region KWin Blur via KWindowEffects](#sub-region-kwin-blur-via-kwindoweffects)
-  - [Cosine-Squared Parabolic Wave Math](#cosine-squared-parabolic-wave-math)
+  - [Continuous Coordinate-Based Wave Math & Micro-Sensitivity](#continuous-coordinate-based-wave-math--micro-sensitivity)
+  - [Collision-Free Dynamic Spacing & Envelope Physics](#collision-free-dynamic-spacing--envelope-physics)
   - [Dynamic Layering and Elevated Hitbox Protection](#dynamic-layering-and-elevated-hitbox-protection)
   - [Padding-Anchored Status Dots](#padding-anchored-status-dots)
   - [Edge-Aware Coordinate Transformations](#edge-aware-coordinate-transformations)
@@ -176,18 +178,18 @@ When many applications are opened or pinned, the dock prevents screen overflow b
 
   ![Auto-Shrinking and Progressive Magnification](assets/demo/auto-shrink.gif)
 
-### Interactive Magnification Wave
+### Interactive Continuous Magnification Wave
 
-Hovering over dock icons triggers a smooth, continuous magnification wave where the target icon expands and neighboring icons scale progressively according to proximity.
+Hovering over dock icons triggers a smooth, continuous coordinate-based magnification wave. Rather than stepping discretely from icon to icon, the dock tracks sub-pixel mouse movement in real time across icon surfaces, expanding the nearest icon and scaling neighboring icons progressively according to continuous proximity.
 
-- **How to use**: In dock settings under **Appearance > Magnification & Animation**, turn on **Magnify icons on hover**. Use the **Zoom scale** spinbox to choose the peak magnification factor (from 1.0x up to 2.0x), and set the **Blast radius (icons)** to specify how many neighboring icons scale alongside the hovered icon (1 to 4 items on each side).
+- **How to use**: In dock settings under **Appearance > Magnification & Animation**, turn on **Magnify icons on hover**. Use the **Zoom scale** spinbox to choose the peak magnification factor (from 1.0x up to 3.5x), and set the **Blast radius (icons)** to specify how many neighboring icons scale alongside the hovered icon (1 to 4 items on each side).
 - **Visual preview**:
 
   ![Interactive Magnification Wave](assets/demo/zoom.gif)
 
 ### Spring and Smooth Animation Physics
 
-You can choose between physical spring simulation or cubic easing curves for icon magnification.
+You can choose between physical spring simulation or cubic easing curves for dock entry and exit animations. Active pointer tracking follows your cursor 1:1 with zero latency, while the master dock envelope provides a calm, graceful transition when moving the cursor into or out of the dock.
 
 - **How to use**: In dock settings under **Appearance > Magnification & Animation**, select your preference in the **Animation physics** dropdown:
   - **Spring physics**: Employs elastic simulation with subtle damping for a bouncy, tactile feel.
@@ -233,6 +235,12 @@ The dock automatically generates a subtle vertical or horizontal separator line 
 
 - **How to use**: Pin favorite applications to your dock. When you open an unpinned app, a clean translucent divider appears automatically between the launcher section and the open window section.
 
+### Native Task Manager Shortcuts (Meta+1..9)
+
+The dock natively supports KDE Plasma's global task activation shortcuts. Pressing **`Meta + 1`** through **`Meta + 9`** (Windows key + number) launches the corresponding pinned app, activates its running window, or cycles through window groups without needing manual shortcut configuration.
+
+- **How to use**: Press **`Super` / `Meta` + `1..9`** on your keyboard to instantly interact with the 1st through 9th items in your dock.
+
 ### All-Edge Screen Placement Support
 
 The dock works on any screen edge, automatically adjusting its orientation, lift direction, indicator offset, and popup placement.
@@ -262,17 +270,34 @@ To solve this, the widget incorporates a native C++ QML item (`DockBlurArea`):
 2. **Rounded Polygon Region**: It constructs a precise `QRegion` from a `QPainterPath` rounded rectangle that matches the capsule's dynamic width, height, and corner radius.
 3. **KWin Compositor Hooks**: It passes this region to `KWindowEffects::enableBlurBehind()` and `KWindowEffects::enableBackgroundContrast()`. KWin's compositor blurs and color-tunes strictly behind the capsule pill while keeping the surrounding panel completely transparent.
 
-### Cosine-Squared Parabolic Wave Math
+### Continuous Coordinate-Based Wave Math & Micro-Sensitivity
 
-Magnification calculation in `main.qml` uses a normalized cosine-squared curve rather than a simple linear step function:
+Rather than measuring distance from discrete integer icon indices, the dock tracks continuous cursor coordinates across the entire dock. As the mouse glides across icon surfaces, `HoverHandler.point` calculates a continuous fractional hover position:
 
 ```text
-distance = abs(iconIndex - hoveredIndex)
-u = distance / (blastRadius + 1)
-factor = (0.5 * (1 + cos(pi * u)))^2
+continuousHoverPosition = iconIndex + cursorOffsetInIcon
+distance = abs(iconIndex - continuousHoverPosition)
+u = distance / (blastRadius + 0.5)
 ```
 
-This mathematical formula produces a smooth bell curve whose first derivative approaches zero at the boundary edges. Neighboring icons ease into expansion gradually and return to rest without abrupt jumps or snapping artifacts.
+To eliminate the "dead zone" flat spots found in pure cosine curves (where the derivative $f'(0) = 0$ prevents immediate response to small cursor movements), the dock blends a steep linear falloff with a smooth cosine tail:
+
+```text
+linearFalloff = 1.0 - u
+smoothTail = 0.5 * (1.0 + cos(pi * u))
+waveFactor = (0.6 * linearFalloff + 0.4 * smoothTail) * linearFalloff
+magnificationFactor = dockHoverProgress * waveFactor
+```
+
+This blended curve has an immediate non-zero slope ($f'(0) \neq 0$) directly under the cursor while preserving a silky smooth departure at the blast radius edges, delivering instant, tactile micro-movement feedback.
+
+### Collision-Free Dynamic Spacing & Envelope Physics
+
+To guarantee that magnified icons never overlap or glitch during rapid mouse movements, three key architectural solutions are in place:
+
+1. **Full 1:1 Expansion Spacing**: The layout calculates extra span dynamically using 100% of each icon's expanded width rather than compressed fractional margins. Neighboring icons gracefully spread apart, preventing collisions even at maximum 3.5x magnification.
+2. **Master Dock Hover Envelope (`dockHoverProgress`)**: Transitions into and out of the dock are governed by a single unified envelope. Leaving the dock triggers a calm ~260ms smooth cubic / gentle spring collapse with an exit grace delay (140ms), preventing abrupt snapping or layout jitter.
+3. **Inter-Icon Gap Bridging**: Hitboxes extend across inter-icon spacing gaps (`halfSpacing`), ensuring seamless continuous hover tracking without dead-zone dropouts when gliding between adjacent icons.
 
 ### Dynamic Layering and Elevated Hitbox Protection
 
