@@ -138,9 +138,38 @@ PlasmoidItem {
 
     property int hoveredTaskIndex: -1
     property real continuousHoverPosition: -1.0
+    property real dockHoverProgress: 0.0
+
+    SpringAnimation {
+        id: dockSpringAnim
+        target: tasks
+        property: "dockHoverProgress"
+        spring: 7.5
+        damping: 0.55
+        epsilon: 0.002
+    }
+
+    NumberAnimation {
+        id: dockSmoothAnim
+        target: tasks
+        property: "dockHoverProgress"
+        duration: 260
+        easing.type: Easing.OutCubic
+    }
+
+    Behavior on dockHoverProgress {
+        animation: tasks.zoomAnimationType === 1 ? dockSmoothAnim : dockSpringAnim
+    }
+
+    onDockHoverProgressChanged: {
+        if (dockHoverProgress <= 0.0) {
+            continuousHoverPosition = -1.0;
+            hoveredTaskIndex = -1;
+        }
+    }
 
     function magnificationFactorForIndex(index: int): real {
-        if (!zoomEnabled || continuousHoverPosition < 0.0) {
+        if (!zoomEnabled || dockHoverProgress <= 0.0 || continuousHoverPosition < -0.5) {
             return 0.0;
         }
         const dist = Math.abs(index - continuousHoverPosition);
@@ -151,20 +180,21 @@ PlasmoidItem {
         const u = dist / maxReach;
         const linearFalloff = 1.0 - u;
         const smoothTail = 0.5 * (1.0 + Math.cos(Math.PI * u));
-        return (0.6 * linearFalloff + 0.4 * smoothTail) * linearFalloff;
+        const waveFactor = (0.6 * linearFalloff + 0.4 * smoothTail) * linearFalloff;
+        return dockHoverProgress * waveFactor;
     }
 
     Timer {
         id: resetHoverTimer
-        interval: 90
+        interval: 140
         onTriggered: {
-            tasks.hoveredTaskIndex = -1;
-            tasks.continuousHoverPosition = -1.0;
+            tasks.dockHoverProgress = 0.0;
         }
     }
 
     function setHoverPosition(index: int, offsetRatio: real): void {
         resetHoverTimer.stop();
+        tasks.dockHoverProgress = 1.0;
         hoveredTaskIndex = index;
         const clampedOffset = Math.max(-0.5, Math.min(0.5, offsetRatio));
         continuousHoverPosition = index + clampedOffset;
