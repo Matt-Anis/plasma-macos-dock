@@ -45,7 +45,7 @@ target_link_libraries(dockblurplugin
 install(TARGETS dockblurplugin
     DESTINATION ${KDE_INSTALL_QMLDIR}/com/github/mattanis/macosdock/blur
 )
-install(FILES qmldir
+install(FILES src/qmldir
     DESTINATION ${KDE_INSTALL_QMLDIR}/com/github/mattanis/macosdock/blur
 )
 
